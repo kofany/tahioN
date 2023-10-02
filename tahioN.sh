@@ -878,7 +878,7 @@ tt "tahioN:${cyan} Pobieram paczkę psotnic"
 sleep 1.5
 pushd /root/ >> /dev/null
 rm_file "/root/psotnic.tar.gz" >/dev/null 2>&1
-wget -q http://dark-si.de/d1/psotnic.tar.gz >/dev/null 2>&1
+wget -q https://github.com/kofany/tahioN/raw/main/psotnic.tar.gz >/dev/null 2>&1
 if [ -f "/root/psotnic.tar.gz" ]; then
     tt "tahioN:${cyan} Pobrano plik psotnic.tar.gz - rozpoczynam instalację"
     sleep 1.5
