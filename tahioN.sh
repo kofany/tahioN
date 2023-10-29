@@ -877,12 +877,11 @@ do_post()
 tt "tahioN:${cyan} Pobieram paczkę psotnic" 
 sleep 1.5
 pushd /root/ >> /dev/null
-rm_file "/root/psotnic.tar.gz" >/dev/null 2>&1
-wget -q https://github.com/kofany/tahioN/raw/main/psotnic.tar.gz >/dev/null 2>&1
-if [ -f "/root/psotnic.tar.gz" ]; then
-    tt "tahioN:${cyan} Pobrano plik psotnic.tar.gz - rozpoczynam instalację"
+
+git clone https://github.com/kofany/psotnic >/dev/null 2>&1
+if [ -d "/root/psotnic" ]; then
+    tt "tahioN:${cyan} Pobrano repo psotnic - rozpoczynam instalację"
     sleep 1.5
-    tar -zxf /root/psotnic.tar.gz >/dev/null 2>&1
     pushd /root/psotnic/ >> /dev/null
     tt "tahioN:${cyan} Instalacja psotnic: ./configure"
     ./configure >/dev/null 2>&1
@@ -895,10 +894,9 @@ if [ -f "/root/psotnic.tar.gz" ]; then
     chmod +x /bin/psotnic >/dev/null 2>&1
     rm -rf /root/psotni* >/dev/null 2>&1
 else
-    tt "tahioN:${cyan} Problem z pobraniem psotnic.tar.gz"
+    tt "tahioN:${cyan} Problem z pobraniem repo psotnic"
 fi
 }
-
 
 do_knb()
 {
