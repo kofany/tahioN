@@ -276,149 +276,149 @@ tt "tahioN:${cyan} Kopiuję nowe motd"
 cat <<'EOF' >> /etc/profile.d/motd.sh
 #!/bin/bash
 ###############################################
-##  tahio.syndykat server scripts            ##
-##  (c) kofany - made with <3 using ChatGPT  ##
+##  Tahio Syndykat Server Scripts            ##
+##  (c) Kofany - Made with ❤ using ChatGPT   ##
 ###############################################
-export LC_ALL=
+
+# Ustawienie lokalizacji i formatu daty
+export LC_ALL=C
 export LC_TIME=C
-# Przypisz wynik polecenia 'date' do zmiennej
+
+# Pobieranie aktualnej daty
 current_date=$(date)
 
-# Ustaw tablice z nazwami dni tygodnia i miesięcy
-dni=("niedziela" "poniedziałek" "wtorek" "środa" "czwartek" "piątek" "sobota")
-angielskie_dni=("Sun" "Mon" "Tue" "Wed" "Thu" "Fri" "Sat")
-miesiace=("styczeń" "luty" "marzec" "kwiecień" "maj" "czerwiec" "lipiec" "sierpień" "wrzesień" "październik" "listopad" "grudzień")
-angielskie_miesiace=("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
+# Definicje dni tygodnia i miesięcy w językach polskim i angielskim
+dni=("Niedziela" "Poniedziałek" "Wtorek" "Środa" "Czwartek" "Piątek" "Sobota")
+miesiace=("Styczeń" "Luty" "Marzec" "Kwiecień" "Maj" "Czerwiec" "Lipiec" "Sierpień" "Wrzesień" "Październik" "Listopad" "Grudzień")
 
-# Pobierz poszczególne części daty
-dzien_tygodnia=$(echo "$current_date" | awk '{print $1}')
-numer_miesiaca=$(echo "$current_date" | awk '{print $2}')
-dzien_miesiaca=$(echo "$current_date" | awk '{print $3}')
-rok=$(echo "$current_date" | awk '{print $6}')
+# Formatowanie daty
+dzien_tygodnia_pl=${dni[$(date +"%w")]}
+numer_miesiaca_pl=${miesiace[$((10#$(date +"%m") - 1))]}
+sformatowana_data="$dzien_tygodnia_pl, $(date +"%d") $numer_miesiaca_pl $(date +"%Y")"
 
-# Zamień angielskie nazwy na polskie
-for i in {0..6}; do
-  if [ "$dzien_tygodnia" == "${angielskie_dni[$i]}" ]; then
-    dzien_tygodnia_pl="${dni[$i]}"
-  fi
-done
-
-for i in {0..11}; do
-  if [ "$numer_miesiaca" == "${angielskie_miesiace[$i]}" ]; then
-    numer_miesiaca_pl="${miesiace[$i]}"
-  fi
-done
-
-# Przypisz sformatowaną datę do zmiennej
-sformatowana_data="$dzien_tygodnia_pl $dzien_miesiaca $numer_miesiaca_pl $rok"
-
-####### Kolory
-METALLIC_GRAY='\033[0;37m'
-BRIGHT_BLUE='\033[1;34m'
+# Kolory i dekoracje
+FAT_GREEN='\033[1;32m'
+IM_YELLOW='\033[0;33m'
 NC='\033[0m' # Brak koloru
-yellow='\033[1;33m'
-red='\033[0;31m'
+UPPER_BORDER="╔═════════════════════════════════[tahio team@IRCnet /join #pato]"
+LOWER_BORDER="╚═════════════════════════════════[made with <3 by kofany & yooz]"
+SIDE_BORDER="║"
 
-#!/bin/bash
+# Informacje o systemie
+up=$(uptime -p)
+hostname=$(hostname)
+users=$(who | wc -l)
+load_average=$(cat /proc/loadavg | awk '{print $1" "$2" "$3}')
 
-asc1='                          oooo$$$$$$$$$$$$oooo'
-asc2='                      oo$$$$$$$$$$$$$$$$$$$$$$$$o'
-asc3='                   oo$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$o         o$   $$ o$'
-asc4='   o $ oo        o$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$o       $$ $$ $$o$'
-asc5='oo $ $ "$      o$$$$$$$$$    $$$$$$$$$$$$$    $$$$$$$$$o       $$$o$$o$'
-asc6='"$$$$$$o$     o$$$$$$$$$      $$$$$$$$$$$      $$$$$$$$$$o    $$$$$$$$'
-asc7='  $$$$$$$    $$$$$$$$$$$      $$$$$$$$$$$      $$$$$$$$$$$$$$$$$$$$$$$'
-asc8='  $$$$$$$$$$$$$$$$$$$$$$$    $$$$$$$$$$$$$    $$$$$$$$$$$$$$  """$$$'
-asc9='   "$$$""""$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$     "$$$'
-asc10='    $$$   o$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$     "$$$o'
-asc11='   o$$"   $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$       $$$o'
-asc12='   $$$    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" "$$$$$$ooooo$$$$o'
-asc13='  o$$$oooo$$$$$  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$   o$$$$$$$$$$$$$$$$$'
-asc14='  $$$$$$$$"$$$$   $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$     $$$$"""""""'
-asc15=' """"       $$$$    "$$$$$$$$$$$$$$$$$$$$$$$$$$$$"      o$$$'
-asc16='            "$$$o     """$$$$$$$$$$$$$$$$$$"$$"         $$$'
-asc17='              $$$o          "$$""$$$$$$""""           o$$$'
-asc18='               $$$$o       '
-asr182='          oo    '
-asc183='         o$$$"'
-asc19='                "$$$$o   '
-asr192='   o$$$$$$o"$$$$o     '
-asc193='   o$$$$'
-asc20='                  "$$$$$oo   '
-asr202='  ""$$$$o$$$$$o  '
-asc203=' o$$$$""'
-asc21='                     ""$$$$$oooo '
-asr212=' "$$$o$$$$$$'
-asc213='$$$"""'
-asc22='                        ""$$$$$$$oo '
-asr222='$$$$$$$$$$'
-asc23='                                """"'
-asr232='$$$$$$$$$$$'
-asr24='                                    $$$$$$$$$$$$'
-asr25='                                     $$$$$$$$$$"'
-asr26='                                      "$$$"""'
-
-####### Główne
-up=$(uptime | awk '{print $3 " " $4 ;}')
-HST=$(hostname)
-users=$(uptime |awk '{print $6}')
-ile=$(lsof -n -iTCP:6660-6669 |grep $USER | awk '{print $1}' | wc -l)
-ipv4=$(lsof -n -iTCP:6660-6669 |grep IPv4 |grep $USER | wc -l)
-ipv6=$(lsof -n -iTCP:6660-6669 |grep IPv6 |grep $USER | wc -l)
-co=$(lsof -n -iTCP:6660-6669 |grep $USER | awk '{print $1}')
-data=$(date | awk '{print " "$1" "$2" "$3" ";}')
-cpu=$(uptime | awk '{print $10 $11 $12 ;}')
-proc=$(ps aux -U $USER | wc -l | awk '{print $1 -1}')
-clock=$(date | awk '{print " "$4" ";}')
-home=$(pwd | awk '{print $1 ;}')
-dzisiaj=$(date "+%d/%m/%y")
-load_average=$(awk '{print $1" "$2" "$3}' /proc/loadavg)
-time_cur=$(date)
-
-line1="${METALLIC_GRAY}     Witaj${BRIGHT_BLUE} ${USER} ${NC}${METALLIC_GRAY} na ${BRIGHT_BLUE}${HST}${NC}"
-line2="${METALLIC_GRAY}     Dzisiaj jest:${BRIGHT_BLUE} ${sformatowana_data} ${NC}"
-line3="${METALLIC_GRAY}       Serwer ciężko pracuje od:${BRIGHT_BLUE} ${up}${NC}"
-line4="${METALLIC_GRAY}      Dla ${yellow}vhosts ${NC}${BRIGHT_BLUE} vhosts${NC}"
-line5="${METALLIC_GRAY}    Sesje IRC w użyciu: ${BRIGHT_BLUE}${ile}${NC}"
-line6="${METALLIC_GRAY}   IPv4: ${BRIGHT_BLUE}${ipv4}${METALLIC_GRAY} IPv6: ${BRIGHT_BLUE}${ipv6}${NC}"
-line7="${METALLIC_GRAY} Komendy powłoki${NC}:${NC}"
-line8="${METALLIC_GRAY}Dla eggdrop${NC}${BRIGHT_BLUE} get-egg${NC}"
-line9="${METALLIC_GRAY}       Dla psotnic${NC}${BRIGHT_BLUE} get-psotnic${NC}"
-line10="${METALLIC_GRAY}               Dla znc ${NC}${BRIGHT_BLUE} get-znc${NC}"
-line11="${METALLIC_GRAY}                Nie zadzieraj z nami!${NC}"
-line12="${METALLIC_GRAY}                 Dane kontaktowe administratora:${NC}"
-line13="${METALLIC_GRAY}                   /msg TU${BRIGHT_BLUE}@${METALLIC_GRAY}PODAJ SWOJE DANE${NC}"
-line14="${METALLIC_GRAY}                     mailto:${BRIGHT_BLUE} j@dabrowski.biz${NC}"
-line15="${METALLIC_GRAY}                      Podziękowania dla${BRIGHT_BLUE} kofany${METALLIC_GRAY}@${BRIGHT_BLUE}IRCnet${NC}"
-
-echo -e "${yellow} $asc1 ${NC}"
-echo -e "${yellow} $asc2 ${NC}"
-echo -e "${yellow} $asc3 ${NC}"
-echo -e "${yellow} $asc4 ${NC}"
-echo -e "${yellow} $asc5 ${NC}"
-echo -e "${yellow} $asc6 ${NC} ${line1}"
-echo -e "${yellow} $asc7 ${NC} ${line2}"
-echo -e "${yellow} $asc8 ${NC} ${line3}"
-echo -e "${yellow} $asc9 ${NC} ${line4}"
-echo -e "${yellow} $asc10 ${NC} ${line5}"
-echo -e "${yellow} $asc11 ${NC} ${line6}"
-echo -e "${yellow} $asc12 ${NC} ${line7}"
-echo -e "${yellow} $asc13 ${NC} ${line8}"
-echo -e "${yellow} $asc14 ${NC} ${line9}"
-echo -e "${yellow} $asc15 ${NC} ${line10}"
-echo -e "${yellow} $asc16 ${NC} ${line11}"
-echo -e "${yellow} $asc17 ${NC} ${line12}"
-echo -e "${yellow} $asc18${red}$asr182${yellow}$asc183${NC} ${line13}"
-echo -e "${yellow} $asc19${red}$asr192${yellow}$asc193${NC} ${line14}"
-echo -e "${yellow} $asc20${red}$asr202${yellow}$asc203${NC} ${line15}"
-echo -e "${yellow} $asc21${red}$asr212${yellow}$asc213${NC}"
-echo -e "${yellow} $asc22${red}$asr222${NC}"
-echo -e "${yellow} $asc23${red}$asr232${NC}"
-echo -e "${red} $asr24 ${NC}"
-echo -e "${red} $asr25 ${NC}"
-echo -e "${red} $asr26 ${NC}"
-
+# Wypisanie informacji MOTD
+echo -e "${IM_YELLOW}${UPPER_BORDER}${NC}"
+echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Witaj${IM_YELLOW} ${USER}${FAT_GREEN}, na serwerze${IM_YELLOW} ${hostname}${NC}"
+echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Dzisiaj jest: ${IM_YELLOW}${sformatowana_data}${NC}"
+echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Serwer pracuje: ${IM_YELLOW}${up}${NC}"
+echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Zalogowanych użytkowników: ${IM_YELLOW}${users}${NC}"
+echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Średnie obciążenie systemu: ${IM_YELLOW}${load_average}${NC}"
+echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Wpisz '${IM_YELLOW}pomoc${NC}'${FAT_GREEN} aby uzyskać listę dostępnych poleceń.${NC}"
+echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
+#pomoc
 EOF
+cat <<'EOF' >> /bin/v6it
+#!/bin/bash
+###############################################
+##  Tahio Syndykat Server Scripts            ##
+##  (c) Kofany - Made with ❤ using ChatGPT   ##
+###############################################
+
+# Kolory i dekoracje
+FAT_GREEN='\033[1;32m'
+IM_YELLOW='\033[1;33m'
+NC='\033[0m' # Brak koloru
+UPPER_BORDER="╔═════════════════════════════════[tahio team@IRCnet /join #pato]"
+LOWER_BORDER="╚═════════════════════════════════[made with <3 by kofany & yooz]"
+SIDE_BORDER="║"
+
+
+# Polecenie do wydobycia adresów IPv6
+cmd_output=$(ip -6 addr show | grep 'inet6 ' | awk '{print $2}' | cut -d/ -f1 | grep -vE '^::1|^fe80.*|^fd.*|^fc.*')
+
+# Wydobycie dwóch pierwszych adresów z każdej klasy /48
+echo -e "${IM_YELLOW}${UPPER_BORDER}${NC}"
+echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Adresy do użycia z irc6.tophost.it:${NC}"
+echo -e "${IM_YELLOW}${SIDE_BORDER}${NC}"
+echo "$cmd_output" | awk -F ':' '{print $1":"$2":"$3}' | sort | uniq -c | \
+while read count prefix; do
+    if [[ $count -ge 2 ]]; then
+        echo "$cmd_output" | grep "^$prefix" | head -n 2 | awk -v prefix="$prefix" -v border="${IM_YELLOW}${SIDE_BORDER}${NC} " -v color="${FAT_GREEN}" '{print border " " color $0 " " }'
+    fi
+done
+echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
+EOF
+chmod +x /bin/v6it
+cat <<'EOF' >> /bin/pomoc
+#!/bin/bash
+###############################################
+##  Tahio.syndykat User Management Script    ##
+##  (c) kofany - enhanced with ChatGPT       ##
+###############################################
+
+# Kolory i dekoracje
+FAT_GREEN='\033[1;32m'
+IM_YELLOW='\033[1;33m'
+NC='\033[0m' # Brak koloru
+UPPER_BORDER="╔═════════════════════════════════[tahio team@IRcnet /join #pato]"
+LOWER_BORDER="╚═════════════════════════════════[made with <3 by kofany & yooz]"
+SIDE_BORDER="║"
+
+PRM="${IM_YELLOW}➜${NC} "
+
+# Funkcja wyświetlająca komendy dla roota
+display_root_commands() {
+    echo -e "${IM_YELLOW}${UPPER_BORDER}${NC}"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Lista dostępnych komend dla administratora:${NC}"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}add${NC} - Dodaje użytkownika (zamiast adduser)"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}addconn${NC} - Zmienia limit połączeń do IRC dla użytkownika"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}addlimit${NC} - Zmienia limit połączeń do IRC dla użytkownika"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}block${NC} - Blokuje konto użytkownika"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}blocked${NC} - Wyświetla zablokowanych użytkowników"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}blocklist${NC} - Wyświetla zablokowanych użytkowników"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}ddos${NC} - Wyświetla, czy aktualnie ktoś atakuje serwer"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}del${NC} - Usuwa konto użytkownika"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}fw${NC} - Otwiera plik firewall (nie ruszać lepiej)"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}fwfree${NC} - Usuwa firewall (nie ruszać lepiej)"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-egg${NC} - Eggdrop"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-psotnic${NC} - Psotnic"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-znc${NC} - ZNC"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}ile${NC} - Wyświetla wszystkie aktywne połączenia do IRC na serwerze"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}rebind${NC} - Restartuje BIND (dla was nie ważne)"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}udel${NC} - To samo co 'del'"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}unban${NC} - Odbanowuje użytkownika zbanowanego przez Fail2Ban"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}unblock${NC} - Zdejmuje blokadę konta użytkownika"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}vhosts${NC} - Pokazuje VHosty"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}knb${NC} - KNB"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}v6it${NC} - Wyświetla po 2 IP z każdej klasy /48 (dla irc6.tophost.it)"
+    echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
+}
+
+# Funkcja wyświetlająca komendy dla zwykłego użytkownika
+display_commands() {
+    echo -e "${IM_YELLOW}${UPPER_BORDER}${NC}"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Lista dostępnych komend dla użytkownika:${NC}"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-egg${NC} - Eggdrop"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-psotnic${NC} - Psotnic"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-znc${NC} - ZNC"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}vhosts${NC} - Pokazuje VHosty"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}knb${NC} - KNB"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}v6it${NC} - Wyświetla po 2 IP z każdej klasy /48 (dla irc6.tophost.it)"
+    echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
+}
+
+# Wywołanie funkcji w zależności od uprawnień użytkownika
+if [ "$(id -u)" -ne 0 ]; then
+  display_commands
+else
+  display_root_commands
+fi
+EOF
+chmod +x /bin/pomoc
 
     tt "tahioN:${cyan} Banner i motd gotowe"
     sleep 1
@@ -1239,7 +1239,6 @@ echo "END_SPIN"
 spinner < $pipe_name
 rm $pipe_name
 clear
-tt "Wynik dodawania 3 wspaniałych:"
 end_of_all
 rm_file "/etc/nftables.conf"
 sleep 5
