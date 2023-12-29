@@ -309,7 +309,10 @@ up=$(uptime -p)
 hostname=$(hostname)
 users=$(who | wc -l)
 load_average=$(cat /proc/loadavg | awk '{print $1" "$2" "$3}')
+HEADER_FORMAT="${IM_YELLOW}${SIDE_BORDER}${NC} %-15s %-9s %-6s %-10s %-4s %-20s\n"
+HEADER=("System plików" "Rozmiar" "Użyte" "  Dostępne" "  Uż%" " Punkt montowania")
 
+# Polecenie df do wyświetlenia informacji o użyciu dysków
 # Wypisanie informacji MOTD
 echo -e "${IM_YELLOW}${UPPER_BORDER}${NC}"
 echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Witaj${IM_YELLOW} ${USER}${FAT_GREEN}, na serwerze${IM_YELLOW} ${hostname}${NC}"
@@ -318,8 +321,14 @@ echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Serwer pracuje: ${IM_YELLOW
 echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Zalogowanych użytkowników: ${IM_YELLOW}${users}${NC}"
 echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Średnie obciążenie systemu: ${IM_YELLOW}${load_average}${NC}"
 echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Wpisz '${IM_YELLOW}pomoc${NC}'${FAT_GREEN} aby uzyskać listę dostępnych poleceń.${NC}"
+echo -e "${IM_YELLOW}${SIDE_BORDER}${NC}"
+echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Aktualne użycie dysków:${NC}"
+printf "$HEADER_FORMAT" "${HEADER[@]}"
+df -h | grep -vE '^Filesystem|tmpfs|cdrom' | awk -v border="" -v color="$FAT_GREEN" -v fmt="$HEADER_FORMAT" 'NR>1 {printf border fmt, $1, $2, $3, $4, $5, $6}'
 echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
 #pomoc
+#dyski
+
 EOF
 cat <<'EOF' >> /bin/v6it
 #!/bin/bash
