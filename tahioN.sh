@@ -402,6 +402,7 @@ display_root_commands() {
     echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}unban${NC} - Odbanowuje użytkownika zbanowanego przez Fail2Ban"
     echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}unblock${NC} - Zdejmuje blokadę konta użytkownika"
     echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}vhosts${NC} - Pokazuje VHosty"
+    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}vh${NC} - Pokazuje VHosty"
     echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}knb${NC} - KNB"
     echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}v6it${NC} - Wyświetla po 2 IP z każdej klasy /48 (dla irc6.tophost.it)"
     echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
@@ -1250,4 +1251,6 @@ rm $pipe_name
 clear
 end_of_all
 rm_file "/etc/nftables.conf"
+cp /bin/vhosts /bin/vh
+chmod +x /bin/vh
 sleep 5
