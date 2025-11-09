@@ -1,0 +1,26 @@
+#!/bin/bash
+###############################################
+##  tahioN - IRC Shell Matrix                ##
+##  (c) kofany & yooz                        ##
+###############################################
+
+clear
+
+cat << "EOF"
+╔═══[⚡ SYSTEM LOCKED ⚡]════════════════════════════════
+║
+║  ⧗ ACCESS DENIED
+║
+║  Your authorization has been suspended.
+║  Contact system administrators for clarification.
+║
+║  ➜ IRC: kofany@IRCnet
+║  ➜ IRC: yooz@IRCnet
+║
+║  Press ENTER to auto-logout...
+║
+╚═══════════════════[tahioN security system]
+EOF
+
+read -t 3 -p ""
+exit

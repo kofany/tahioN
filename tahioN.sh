@@ -31,69 +31,150 @@ tt() {
     fi
 }
 
-####################################### Spinner
-lines_limit=16
-buffer=()
+####################################### Progress Bar System
 
-spinner()
-{
-    local delay=0.02
-    local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
-    local line
-    local end_marker="END_SPIN"
-    local spinner_topic="tahioN:"
-    local previous_line_length=0
+# Globalne zmienne dla progress bar
+declare -a TASKS_NAMES
+declare -a TASKS_STATUS  # 0=pending, 1=in_progress, 2=completed
+CURRENT_TASK_IDX=0
+START_TIME=0
+SPINNER_PID=0
+SPINNER_CHARS='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
 
-    tput civis  # Ukryj kursor
-    while true; do
-        for ((i=0; i<${#spinstr}; i++)); do
-            local temp=${spinstr:$i:1}
-            tput cup 0 0 # Przesuń kursor do górnej linii
-            printf "${CYAN}[$YELLOW$temp$CYAN]  $YELLOW$line$RESET\r"
-            sleep $delay
-            if read -t 0.1 -r line; then
-                if [[ $line == $end_marker ]]; then
-                    break 2
-                fi
+# Inicjalizacja tasków - Cyberpunk edition
+init_tasks() {
+    TASKS_NAMES=(
+        "⚡ IPv6 network detection & GitHub proxy setup"
+        "⬢ APT repository synchronization & package matrix"
+        "∞ Zsh + modern CLI tools deployment (eza/zoxide/fzf)"
+        "◆ SSH hardening & Fail2Ban protection matrix"
+        "⧗ MOTD cyberpunk matrix deployment"
+        "⚙ BIND9 DNS server configuration"
+        "➜ Eggdrop bot assembly v1.8.4"
+        "➜ Psotnic bot deployment sequence"
+        "➜ KNB bot initialization protocol"
+        "⚡ Binary update & system finalization"
+    )
 
-                local padding_length=$((previous_line_length - ${#line} + 5))
-                local padding=$(printf "%${padding_length}s" " ")
-
-                # Dodaj odpowiednią ilość spacji do końca każdej linii
-                line="${line}${padding}"
-                buffer=("$line" "${buffer[@]}")
-                previous_line_length=${#line}
-
-                if [[ ${#buffer[@]} -gt $lines_limit ]]; then
-                    buffer=("${buffer[@]:0:${lines_limit}}")
-                fi
-
-                # Wyczyść poprzednie linie
-                for ((j=1; j<=$lines_limit; j++)); do
-                    tput cup $j 0
-                    tput el # Wyczyść linię
-                done
-
-                # Drukuj nowe linie
-                local idx=1
-                for entry in "${buffer[@]}"; do
-                    tput cup $idx 0
-                    echo "$entry"
-                    ((idx++))
-                done
-
-                # Jeśli linia zawiera spinner_topic, wyświetl całą linię jako spinera
-                if [[ $line == *$spinner_topic* ]]; then
-                    line=$line
-                else
-                    line=""
-                fi
-            fi
-        done
+    # Inicjalizacja wszystkich jako pending (0)
+    for i in "${!TASKS_NAMES[@]}"; do
+        TASKS_STATUS[$i]=0
     done
-    tput cup 0 0
-    tput el
-    tput cnorm  # Pokaż kursor
+
+    START_TIME=$(date +%s)
+}
+
+# Funkcja rysująca progress bar - Cyberpunk edition (open-ended frame)
+draw_progress() {
+    local total_tasks=${#TASKS_NAMES[@]}
+    local completed_tasks=0
+
+    # Policz zakończone taski
+    for status in "${TASKS_STATUS[@]}"; do
+        if [ "$status" -eq 2 ]; then
+            ((completed_tasks++))
+        fi
+    done
+
+    # Oblicz procent
+    local percent=$((completed_tasks * 100 / total_tasks))
+
+    # Oblicz elapsed time
+    local current_time=$(date +%s)
+    local elapsed=$((current_time - START_TIME))
+    local minutes=$((elapsed / 60))
+    local seconds=$((elapsed % 60))
+
+    # Wyczyść ekran i ukryj kursor
+    clear
+    tput civis
+
+    # Cyberpunk header z open-ended frame (no right border)
+    echo -e "${cyan}╔═══[${yellow}⚡ tahioN v1.0 ⚡${cyan}]═══[${green}DEPLOYING IRC MAINFRAME${cyan}]${NC}"
+    echo -e "${cyan}║${NC}"
+
+    # Pasek postępu
+    local bar_width=40
+    local filled=$((percent * bar_width / 100))
+    local empty=$((bar_width - filled))
+
+    printf "${cyan}║${NC}  ${yellow}⬢${NC} SYSTEM INIT :: ["
+    printf "${green}%${filled}s" | tr ' ' '█'
+    printf "${metalic_gray}%${empty}s" | tr ' ' '░'
+    printf "${NC}] ${cyan}%d/%d${NC} ${green}(%d%%)${NC}\n" "$completed_tasks" "$total_tasks" "$percent"
+
+    echo -e "${cyan}║${NC}"
+    echo -e "${cyan}╠═══════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${cyan}║${NC}"
+
+    # Lista tasków
+    for i in "${!TASKS_NAMES[@]}"; do
+        local task_name="${TASKS_NAMES[$i]}"
+        local status="${TASKS_STATUS[$i]}"
+        local icon=""
+        local color="${NC}"
+
+        if [ "$status" -eq 2 ]; then
+            icon="${green}✓${NC}"
+            color="${metalic_gray}"
+        elif [ "$status" -eq 1 ]; then
+            icon="${yellow}${SPINNER_CURRENT_CHAR}${NC}"
+            color="${cyan}"
+        else
+            icon="${metalic_gray}○${NC}"
+            color="${metalic_gray}"
+        fi
+
+        echo -e "${cyan}║${NC}  $icon ${color}${task_name}${NC}"
+    done
+
+    echo -e "${cyan}║${NC}"
+    echo -e "${cyan}╠═══════════════════════════════════════════════════════════════════${NC}"
+    printf "${cyan}║${NC}  ${green}⧗ ELAPSED: %02d:%02d${NC}\n" "$minutes" "$seconds"
+    echo -e "${cyan}║${NC}"
+    echo -e "${cyan}╚═══════════════════════════[${metalic_gray}made with <3 by kofany & yooz${cyan}]${NC}"
+}
+
+# Spinner w tle
+spinner_animation() {
+    local idx=0
+    while true; do
+        SPINNER_CURRENT_CHAR="${SPINNER_CHARS:$idx:1}"
+        draw_progress
+        sleep 0.1
+        idx=$(( (idx + 1) % ${#SPINNER_CHARS} ))
+    done
+}
+
+# Start task
+start_task() {
+    local task_idx=$1
+    CURRENT_TASK_IDX=$task_idx
+    TASKS_STATUS[$task_idx]=1
+    SPINNER_CURRENT_CHAR="${SPINNER_CHARS:0:1}"
+
+    # Uruchom spinner w tle
+    spinner_animation &
+    SPINNER_PID=$!
+
+    # Daj chwilę na wyświetlenie
+    sleep 0.2
+}
+
+# Complete task
+complete_task() {
+    local task_idx=$1
+
+    # Zatrzymaj spinner
+    if [ $SPINNER_PID -ne 0 ]; then
+        kill $SPINNER_PID 2>/dev/null
+        wait $SPINNER_PID 2>/dev/null
+        SPINNER_PID=0
+    fi
+
+    TASKS_STATUS[$task_idx]=2
+    draw_progress
+    sleep 0.3
 }
 
 
@@ -122,11 +203,10 @@ fi
 ####################################### Funkcje pomocnicze
 
 ####################################### Usuwanie pliku jeśli istnieje
-rm_file() 
+rm_file()
 {
 if [ -f "${*}" ]; then
-tt "tahioN:${cyan} Usuwam plik: ${cyan}${*}"
-rm -rf ${*}
+rm -rf ${*} >/dev/null 2>&1
 fi
 }
 
@@ -189,7 +269,7 @@ while IFS= read -r line; do
 done <<< "$ascii_art"
 
 tt "Witaj! Przeprowadzę automatyczną instalację na tej maszynie..."
-tt "Twój port SSH zostanie ustawiony na ${cyan}${SSH_PORT}" 
+tt "Twój port SSH zostanie ustawiony na ${cyan}${SSH_PORT}"
 tt "Nazwa Twojego serwera zostanie ustawiona na ${yellow}${SERVER_NAME}"
 tt "Ten skrypt jest przeznaczony wyłącznie dla tahioSyndykat"
 tt "Jeśli nie jesteś jednym z Nas, nie korzystaj z niego, bo zepsujesz swoje pudło! (dupsko również) :P"
@@ -198,38 +278,373 @@ yes_or_no "Rozpoczynamy konfigurację boxa?"
 
 }
 
+####################################### IPv6 GitHub Support
+
+do_ipv6_setup()
+{
+    # Wykryj typ sieci (IPv4 vs IPv6-only)
+    if ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
+        # IPv4 działa - używaj normalnych GitHub URL
+        GITHUB_URL="https://github.com"
+        IPV6_ONLY=false
+    else
+        # IPv4 nie działa, sprawdź IPv6
+        if ping -c 1 -W 2 2001:4860:4860::8888 >/dev/null 2>&1; then
+            # IPv6-only network - używaj danwin proxy
+            GITHUB_URL="https://danwin1210.de:1443"
+            IPV6_ONLY=true
+        else
+            # Brak sieci w ogóle
+            echo "ERROR: No network connectivity detected!"
+            exit 1
+        fi
+    fi
+
+    # Eksportuj zmienne dla innych funkcji
+    export GITHUB_URL
+    export IPV6_ONLY
+}
+
+####################################### Konfiguracja Zsh z nowoczesnymi narzędziami CLI
+
+do_zsh_setup()
+{
+# Install zinit globally (używając wykrytego GitHub URL dla wsparcia IPv6)
+if [ ! -d "/usr/local/share/zinit" ]; then
+    mkdir -p /usr/local/share/zinit
+    git clone ${GITHUB_URL}/zdharma-continuum/zinit.git /usr/local/share/zinit/zinit.git >/dev/null 2>&1
+fi
+
+# Utwórz globalny .zshrc dla wszystkich użytkowników (bez Powerlevel10k)
+cat <<'ZSHRC' > /etc/skel/.zshrc
+# Use globally installed zinit
+ZINIT_HOME="/usr/local/share/zinit/zinit.git"
+
+# Source/Load zinit
+source "${ZINIT_HOME}/zinit.zsh"
+
+# Add in zsh plugins
+zinit light zsh-users/zsh-syntax-highlighting
+zinit light zsh-users/zsh-completions
+zinit light zsh-users/zsh-autosuggestions
+zinit light Aloxaf/fzf-tab
+
+# Add in snippets
+zinit snippet OMZL::git.zsh
+zinit snippet OMZP::git
+zinit snippet OMZP::sudo
+zinit snippet OMZP::command-not-found
+
+# Load completions
+autoload -Uz compinit && compinit
+
+zinit cdreplay -q
+
+# Keybindings
+bindkey -e
+bindkey '^p' history-search-backward
+bindkey '^n' history-search-forward
+bindkey '^[w' kill-region
+
+# History
+HISTSIZE=5000
+HISTFILE=~/.zsh_history
+SAVEHIST=$HISTSIZE
+HISTDUP=erase
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
+
+# Completion styling
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' menu no
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza --tree --color=always --icons $realpath 2>/dev/null || ls --color $realpath'
+zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza --tree --color=always --icons $realpath 2>/dev/null || ls --color $realpath'
+
+# Aliases - Modern CLI Tools
+if command -v eza &> /dev/null; then
+  alias ls='eza --icons --group-directories-first'
+  alias ll='eza -l --icons --git --group-directories-first'
+  alias la='eza -la --icons --git --group-directories-first'
+  alias lt='eza --tree --level=2 --icons'
+else
+  alias ls='ls --color'
+  alias ll='ls -lh'
+  alias la='ls -lah'
+fi
+
+# Basic aliases
+alias c='clear'
+alias cls='clear'
+
+# Navigation
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Git aliases
+alias glog='git log --oneline --graph --decorate --all'
+alias gundo='git reset --soft HEAD~1'
+alias gwip='git add -A && git commit -m "WIP"'
+
+# System
+alias myip='curl ifconfig.me'
+alias ports='lsof -PiTCP -sTCP:LISTEN'
+
+# Functions
+mkcd() {
+  mkdir -p "$1" && cd "$1"
+}
+
+backup() {
+  if [ -f "$1" ]; then
+    cp "$1" "$1.backup-$(date +%Y%m%d-%H%M%S)"
+    echo "✓ Backup created: $1.backup-$(date +%Y%m%d-%H%M%S)"
+  else
+    echo "✗ File not found: $1"
+  fi
+}
+
+backupdir() {
+  local backup_dir="$HOME/Backups"
+  mkdir -p "$backup_dir"
+  if [ -f "$1" ]; then
+    local filename=$(basename "$1")
+    local backup_path="$backup_dir/${filename}.backup-$(date +%Y%m%d-%H%M%S)"
+    cp "$1" "$backup_path"
+    echo "✓ Backup saved to: $backup_path"
+  else
+    echo "✗ File not found: $1"
+  fi
+}
+
+ex() {
+  if [ -f "$1" ]; then
+    case "$1" in
+      *.tar.bz2)   tar xjf "$1"   ;;
+      *.tar.gz)    tar xzf "$1"   ;;
+      *.bz2)       bunzip2 "$1"   ;;
+      *.rar)       unrar x "$1"   ;;
+      *.gz)        gunzip "$1"    ;;
+      *.tar)       tar xf "$1"    ;;
+      *.tbz2)      tar xjf "$1"   ;;
+      *.tgz)       tar xzf "$1"   ;;
+      *.zip)       unzip "$1"     ;;
+      *.Z)         uncompress "$1";;
+      *.7z)        7z x "$1"      ;;
+      *)           echo "'$1' cannot be extracted via ex()" ;;
+    esac
+  else
+    echo "'$1' is not a valid file"
+  fi
+}
+
+gcommit() {
+  git add -A && git commit -m "$*"
+}
+
+killport() {
+  lsof -ti:$1 | xargs kill -9
+}
+
+# Shell integrations
+# fzf shell integration (modern method for fzf 0.48.0+)
+source <(fzf --zsh)
+
+# zoxide integration
+eval "$(zoxide init --cmd cd zsh)"
+
+# Add cargo bin to PATH
+export PATH="$HOME/.cargo/bin:$PATH"
+
+# Add local bin to PATH
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.dotnet:$PATH"
+ZSHRC
+
+# Upewnij się że /etc/skel/.zshrc ma odpowiednie uprawnienia
+chmod 644 /etc/skel/.zshrc
+}
+
+####################################### MOTD Cyberpunk - modułowy system /etc/update-motd.d/
+
+do_motd_cyberpunk()
+{
+# Utwórz katalog /etc/tahion/ dla konfiguracji
+mkdir -p /etc/tahion
+
+# Utwórz plik z reklamami/linkami (jeden link na linię)
+cat > /etc/tahion/ads.txt <<'ADS'
+⚡ erssi.org - Modern IRC Client
+⬢ sshm.io - SSH Management Tool
+∞ tb.tahio.eu - TahioN Toolbox
+ADS
+
+# Wyłącz stare metody MOTD
+# PrintMotd jest już ustawione na 'no' w sshd_config
+rm -f /etc/motd
+rm -f /etc/profile.d/motd.sh
+
+# Wyczyść stare skrypty update-motd.d
+rm -f /etc/update-motd.d/*
+
+# Utwórz /etc/update-motd.d/00-header z cyberpunk stylem + rotating ads
+cat > /etc/update-motd.d/00-header <<'HEADER'
+#!/bin/bash
+
+# Losuj reklamę z pliku ads.txt
+if [ -f /etc/tahion/ads.txt ]; then
+    AD_LINE=$(shuf -n 1 /etc/tahion/ads.txt)
+else
+    AD_LINE="⚡ tahioN IRC Shell Installer"
+fi
+
+# Cyberpunk header z open-ended frame
+cat <<EOF
+╔═══════════════════════════════════════════════════════════════════
+║
+║  ▀█▀ ▄▀█ █░█ █ █▀█ █▄░█
+║  ░█░ █▀█ █▀█ █ █▄█ █░▀█
+║
+║  ${AD_LINE}
+║
+╠═══════════════════════════════════════════════════════════════════
+EOF
+HEADER
+chmod +x /etc/update-motd.d/00-header
+
+# Utwórz /etc/update-motd.d/10-sysinfo
+cat > /etc/update-motd.d/10-sysinfo <<'SYSINFO'
+#!/bin/bash
+
+# Pobierz informacje systemowe
+HOSTNAME=$(hostname -f)
+KERNEL=$(uname -r)
+UPTIME=$(uptime -p | sed 's/up //')
+LOAD=$(cat /proc/loadavg | awk '{print $1", "$2", "$3}')
+MEMORY=$(free -h | awk '/^Mem:/ {print $3"/"$2}')
+SWAP=$(free -h | awk '/^Swap:/ {print $3"/"$2}')
+
+# IPv4 i IPv6
+IPV4=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1' | head -1)
+IPV6=$(ip -6 addr show | grep -oP '(?<=inet6\s)[\da-f:]+' | grep -v '^::1' | grep -v '^fe80' | head -1)
+
+[ -z "$IPV4" ] && IPV4="N/A"
+[ -z "$IPV6" ] && IPV6="N/A"
+
+cat <<EOF
+║
+║  ⬢ SYSTEM STATUS
+║
+║    ➜ Hostname:      ${HOSTNAME}
+║    ➜ Kernel:        ${KERNEL}
+║    ➜ Uptime:        ${UPTIME}
+║    ➜ Load Average:  ${LOAD}
+║    ➜ Memory:        ${MEMORY}
+║    ➜ Swap:          ${SWAP}
+║    ➜ IPv4:          ${IPV4}
+║    ➜ IPv6:          ${IPV6}
+║
+╠═══════════════════════════════════════════════════════════════════
+EOF
+SYSINFO
+chmod +x /etc/update-motd.d/10-sysinfo
+
+# Utwórz /etc/update-motd.d/50-diskspace
+cat > /etc/update-motd.d/50-diskspace <<'DISK'
+#!/bin/bash
+
+cat <<EOF
+║
+║  ⚙ DISK USAGE
+║
+EOF
+
+# Pokaż wykorzystanie dysków (bez tmpfs, devtmpfs)
+df -h | grep -vE '^(tmpfs|devtmpfs|udev)' | awk 'NR==1 {next} {printf "║    %-20s %5s / %-5s (%s)\n", $6, $3, $2, $5}'
+
+cat <<EOF
+║
+╚═══════════════════════════════════════════════════════════════════
+EOF
+DISK
+chmod +x /etc/update-motd.d/50-diskspace
+
+# Wyłącz domyślne ubuntu/debian MOTD skrypty jeśli istnieją
+chmod -x /etc/update-motd.d/10-help-text 2>/dev/null || true
+chmod -x /etc/update-motd.d/50-landscape-sysinfo 2>/dev/null || true
+chmod -x /etc/update-motd.d/50-motd-news 2>/dev/null || true
+chmod -x /etc/update-motd.d/80-esm 2>/dev/null || true
+chmod -x /etc/update-motd.d/80-livepatch 2>/dev/null || true
+chmod -x /etc/update-motd.d/90-updates-available 2>/dev/null || true
+chmod -x /etc/update-motd.d/91-release-upgrade 2>/dev/null || true
+chmod -x /etc/update-motd.d/95-hwe-eol 2>/dev/null || true
+
+}
+
 ####################################### Wykonywanie instalacji pakietów przez APT
 
 do_apt()
 {
-    tt "tahioN:${cyan} Aktualizuje APT\n"
-
     DEBIAN_FRONTEND=noninteractive apt-get -y update >/dev/null 2>&1
     DEBIAN_FRONTEND=noninteractive apt-get -y upgrade >/dev/null 2>&1
 
-    tt "tahioN:${cyan} Instaluje potrzebne pakiety\n"
-    DEBIAN_FRONTEND=noninteractive apt-get -y install  sudo telnet wget >/dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt-get -y install  irssi screen iptables>/dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt-get -y install  znc oidentd curl jq >/dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt-get -y install  tcl tcl-dev openssl libssl-dev >/dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt-get -y install  gcc make net-tools bind9 >/dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt-get -y install  fail2ban dnsutils lsof >/dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt-get -y install  dialog mc htop wget >/dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt-get -y install  systemd figlet git >/dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt-get -y install  php-cli curl apache2 >/dev/null 2>&1
+    # Basic tools and utilities
+    DEBIAN_FRONTEND=noninteractive apt-get -y install sudo telnet wget curl git >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install irssi screen iptables dialog mc htop >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install znc oidentd jq figlet lsof dnsutils >/dev/null 2>&1
+
+    # Build tools and compilers
+    DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential gcc make >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install automake autoconf libtool pkg-config >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install cmake meson ninja-build >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip >/dev/null 2>&1
+
+    # Development libraries - crypto and security
+    DEBIAN_FRONTEND=noninteractive apt-get -y install openssl libssl-dev >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install libgcrypt20-dev libotr5-dev >/dev/null 2>&1
+
+    # Development libraries - core libraries
+    DEBIAN_FRONTEND=noninteractive apt-get -y install libglib2.0-dev >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install libutf8proc-dev >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install libncurses-dev >/dev/null 2>&1
+
+    # TCL/TK for Eggdrop
+    DEBIAN_FRONTEND=noninteractive apt-get -y install tcl tcl-dev >/dev/null 2>&1
+
+    # Server software
+    DEBIAN_FRONTEND=noninteractive apt-get -y install bind9 fail2ban systemd >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install caddy php-cli php-fpm >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install net-tools >/dev/null 2>&1
+
+    # Zsh and modern CLI tools
+    DEBIAN_FRONTEND=noninteractive apt-get -y install zsh fzf eza zoxide >/dev/null 2>&1
+
+    # Perl modules for IRC bots
+    DEBIAN_FRONTEND=noninteractive apt-get -y install libdbi-perl libwww-perl liburi-escape-xs-perl >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install libhtml-html5-entities-perl libxml-xpath-perl >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install libdbd-mysql-perl liburi-perl libnet-dns-perl >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt-get -y install libjson-perl libtext-aspell-perl >/dev/null 2>&1
+
+    # Remove unwanted packages
     DEBIAN_FRONTEND=noninteractive apt-get -y remove nftables >/dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt-get -y remove resolvconf >/dev/null 2>&1    
-    
+    DEBIAN_FRONTEND=noninteractive apt-get -y remove resolvconf >/dev/null 2>&1
+
+    # Clean up
+    DEBIAN_FRONTEND=noninteractive apt-get -y autoremove >/dev/null 2>&1
 }
 ####################################### motd i baner
 
 do_motd()
 {
-    tt "tahioN:${cyan} Aktualizuję motd i baner"
     rm_file "/etc/motd"
     rm_file "/etc/banner"
     rm_file "/etc/profile.d/motd.sh"
-    tt "tahioN:${cyan} Kopiuje nowy banner"
 
 cat <<'EOF' >> /etc/banner
 
@@ -269,9 +684,6 @@ __...._"_-.. \                       _,                             _..-""
                                             We are the horde
 
 EOF
-
-tt "tahioN:${cyan} Kopiuję nowe motd"
-
 
 cat <<'EOF' >> /etc/profile.d/motd.sh
 #!/bin/bash
@@ -402,7 +814,6 @@ display_root_commands() {
     echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}unban${NC} - Odbanowuje użytkownika zbanowanego przez Fail2Ban"
     echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}unblock${NC} - Zdejmuje blokadę konta użytkownika"
     echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}vhosts${NC} - Pokazuje VHosty"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}vh${NC} - Pokazuje VHosty"
     echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}knb${NC} - KNB"
     echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}v6it${NC} - Wyświetla po 2 IP z każdej klasy /48 (dla irc6.tophost.it)"
     echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
@@ -430,16 +841,10 @@ fi
 EOF
 chmod +x /bin/pomoc
 
-    tt "tahioN:${cyan} Banner i motd gotowe"
-    sleep 1
-    tt "tahioN:${cyan} Ustawiam hostname i LC_TIME"
-    sleep 1
     rm_file "/etc/hostname"
     echo -e "LC_TIME=\"C\"" >> /etc/default/locale
     echo -e "${SERVER_NAME}" >> /etc/hostname
     hostname ${SERVER_NAME} < /dev/null > /dev/null
-    tt "tahioN:${cyan} Ustawiam promt"
-    sleep 1
     rm_file "/etc/profile"
     rm_file "/etc/bash.bashrc"
 
@@ -599,8 +1004,6 @@ touch /etc/skel/.hushlogin
 do_sshd_f2b()
 {
 # Fail2ban
-tt "tahioN:${cyan} Ustawiam fail2ban"
-sleep 1.5
 # Zdefiniuj swoje zaufane adresy IP oddzielone spacjami
 trusted_ips="127.0.0.1/8"
 
@@ -630,19 +1033,23 @@ echo -e "[sshd]\nmaxretry = $max_attempts\nport = $ssh_port" > /etc/fail2ban/jai
 # Zrestartuj Fail2Ban, aby zastosować nowe ustawienia
 sudo systemctl restart fail2ban
 
-tt "tahioN:${cyan} Zaktualizowano jail.local, jail-debian.local i zrestartowano Fail2Ban."
-sleep 1.5
-# sshd_config 
-
-tt "tahioN:${cyan} Podmieniam plik sshd_config i ssh.txt"
-sleep 1.5
+# sshd_config
 rm_file "/etc/ssh/sshd_config"
 rm_file "/var/log/ssh.txt"
 touch /var/log/ssh.txt
 echo -e "${SSH_PORT}" >> /var/log/ssh.txt
 echo -e "Port ${SSH_PORT}" >> /etc/ssh/sshd_config
+
+# Conditional IPv6/IPv4 listen
+if [ "$IPV6_ONLY" = true ]; then
+    echo "ListenAddress ::" >> /etc/ssh/sshd_config
+else
+    # Dual-stack - słuchaj na obu
+    echo "ListenAddress 0.0.0.0" >> /etc/ssh/sshd_config
+    echo "ListenAddress ::" >> /etc/ssh/sshd_config
+fi
+
 cat <<'EOF' >> /etc/ssh/sshd_config
-ListenAddress 0.0.0.0
 PermitRootLogin no
 ChallengeResponseAuthentication no
 UsePAM yes
@@ -653,8 +1060,6 @@ AcceptEnv LANG LC_*
 Subsystem       sftp    /usr/lib/openssh/sftp-server
 PrintLastLog no
 EOF
-tt "tahioN:${cyan} sshd_config gotowy"
-sleep 1.5
 rm_file "/etc/resolv.conf"
 cat <<'EOF' >> /etc/resolv.conf
 nameserver 8.8.8.8
@@ -663,13 +1068,10 @@ nameserver 9.9.9.9
 nameserver 2001:4860:4860::8888
 nameserver 2606:4700:4700::1111
 EOF
-sleep 1.5
 }
 
 do_bind()
 {
-tt "tahioN:${cyan} Kopiuje przykładową konfigurację bind dla ipv6"
-sleep 1.5
 rm_file "/etc/bind/named.conf.local"
 rm_file "/etc/bind/db.v6"
 
@@ -702,8 +1104,6 @@ EOF
 
 do_egg()
 {
-tt "tahioN:${cyan} Pobieram eggdrop 1.8.4"
-sleep 1.5
 pushd /root/ >> /dev/null
 # Ustawienie adresu URL i nazwy pliku
 url="http://ftp.eggheads.org/pub/eggdrop/source/1.8/eggdrop-1.8.4.tar.gz"
@@ -717,11 +1117,8 @@ wget -q ${url} -O ${file_name} >/dev/null 2>&1
 downloaded_sha256=$(sha256sum ${file_name} | awk '{print $1}')
 
 if [ "${correct_sha256}" == "${downloaded_sha256}" ]; then
-    tt "tahioN:${cyan} Plik został pobrany prawidłowo."
+    :  # SHA256 OK
 else
-    tt "tahioN:${cyan} Błąd: suma kontrolna SHA256 nie zgadza się."
-    tt "tahioN:${cyan} Oczekiwana: ${correct_sha256}"
-    tt "tahioN:${cyan} Otrzymana: ${downloaded_sha256}"
     rm_file ${file_name} >/dev/null 2>&1
     exit 1
 fi
@@ -729,16 +1126,11 @@ fi
     pushd /root/ >/dev/null 2>&1
     tar -zxf /root/eggdrop-1.8.4.tar.gz >/dev/null 2>&1
     pushd /root/eggdrop-1.8.4 >/dev/null 2>&1
-    tt "tahioN:${cyan} Instalacja eggdrop: ./configure "
     ./configure --enable-ipv6 >/dev/null 2>&1
-    tt "tahioN:${cyan} Instalacja eggdrop: make config"
     make config >/dev/null 2>&1
-    tt "tahioN:${cyan} Instalacja eggdrop: make"
     make >/dev/null 2>&1
-    tt "tahioN:${cyan} Instalacja eggdrop: make install"
     make install >/dev/null 2>&1
     pushd /root/ >/dev/null 2>&1
-    tt "tahioN:${cyan} Instalacja eggdrop: kopiuje przykładowy eggdrop.conf"
     rm -rf  /root/eggdrop/eggdrop.conf >/dev/null 2>&1
 cat <<'EOF' >> /root/eggdrop/eggdrop.conf
 #! /bin/eggdrop
@@ -878,297 +1270,198 @@ mkdir /bin/tools/ >/dev/null 2>&1
 mv /root/egg.tar.gz /bin/tools/egg.tar.gz >/dev/null 2>&1
 chmod 755 /bin/tools/egg.tar.gz >/dev/null 2>&1
 rm -r /root/eggdro* >/dev/null 2>&1
-tt "tahioN:${cyan} Eggdrop gotowy" >/dev/null 2>&1
-sleep 1.5
 }
 
 do_post()
 {
-tt "tahioN:${cyan} Pobieram paczkę psotnic" 
-sleep 1.5
 pushd /root/ >> /dev/null
 
-git clone https://github.com/kofany/psotnic >/dev/null 2>&1
+git clone ${GITHUB_URL}/kofany/psotnic >/dev/null 2>&1
 if [ -d "/root/psotnic" ]; then
-    tt "tahioN:${cyan} Pobrano repo psotnic - rozpoczynam instalację"
-    sleep 1.5
     pushd /root/psotnic/ >> /dev/null
-    tt "tahioN:${cyan} Instalacja psotnic: ./configure"
     ./configure >/dev/null 2>&1
     pushd /root/psotnic/ >> /dev/null
-    tt "tahioN:${cyan} Instalacja psotnic: make dynamic"
     make dynamic >/dev/null 2>&1
-    tt "tahioN:${cyan} Instalacja zakończona, przenoszę pliki"
-    sleep 0.5
     mv /root/psotnic/bin/psotnic /bin/psotnic >/dev/null 2>&1
     chmod +x /bin/psotnic >/dev/null 2>&1
     rm -rf /root/psotni* >/dev/null 2>&1
-else
-    tt "tahioN:${cyan} Problem z pobraniem repo psotnic"
 fi
 }
+
 
 do_knb()
 {
-tt "tahioN:${cyan} Pobieram paczkę knb" 
-sleep 1.5
 pushd /root/ >> /dev/null
-git clone https://github.com/kofany/knb >/dev/null 2>&1
+git clone ${GITHUB_URL}/kofany/knb >/dev/null 2>&1
 if [ -d "/root/knb" ]; then
-    tt "tahioN:${cyan} Pobrano z github knb"
-    sleep 1.5
     pushd /root/knb/src/ >> /dev/null
-    tt "tahioN:${cyan} Instalacja knb: ./configure"
     chmod +x configure
     ./configure --without-validator >/dev/null 2>&1
-    tt "tahioN:${cyan} Instalacja knb: make dynamic"
     make dynamic >/dev/null 2>&1
-    tt "tahioN:${cyan} Instalacja zakończona, przenoszę pliki"
-    sleep 0.5
     mv /root/knb/knb-0.2.5-linux /bin/knb >/dev/null 2>&1
     chmod +x /bin/knb >/dev/null 2>&1
     rm -rf /root/knb* >/dev/null 2>&1
-else
-    tt "tahioN:${cyan} Problem z pobraniem psotnic.tar.gz"
 fi
 }
 
-do_fw()
-{
-    
-tt "tahioN:${cyan} Rozpoczynam tworzenie pliku firewall"
-sleep 1.5
-
-# Stwórz plik nftables.conf z konfiguracją
-rm_file /etc/nftables.conf >/dev/null 2>&1
-
-tt "tahioN:${cyan} Tworzę plik odpowiedzialny za limitowanie połączeń do irc per user."
-rm_file "/etc/limit_irc.sh" >/dev/null 2>&1
-rm_file "/etc/limit_irc.db" >/dev/null 2>&1
-echo -e "#!/bin/bash" >> /etc/limit_irc.sh
-echo -e "SSHPORT=\"${SSH_PORT}\"" >> /etc/limit_irc.sh
-
-cat <<'EOF' >> /etc/limit_irc.sh
-
-LIMIT_FILE="/etc/limit_irc.db"
-LIMIT_FILE_COPY="/etc/limit_irc.db.copy"
-IRC_PORTS="6660:7001" # Zaktualizowany zakres portów IRC do limitowania
-
-# Tworzenie kopii pliku limit_irc.db, jeśli jeszcze nie istnieje
-if [ ! -f "$LIMIT_FILE_COPY" ]; then
-    cp "$LIMIT_FILE" "$LIMIT_FILE_COPY"
-fi
-
-# Firewall
-firewall() {
-BIN="/sbin/iptables"
-BIN6="/sbin/ip6tables"
-
-$BIN -F
-$BIN -X
-$BIN -F INPUT
-$BIN -F OUTPUT
-$BIN -F FORWARD
-$BIN -t nat -F
-$BIN -t nat -X
-
-$BIN -P INPUT ACCEPT
-
-$BIN6 -F
-$BIN6 -X
-$BIN6 -Z
-
-$BIN6 -P INPUT       ACCEPT
-$BIN6 -P OUTPUT      ACCEPT
-$BIN6 -P FORWARD     ACCEPT
-$BIN6 -F
-$BIN6 -I INPUT -p icmpv6 -j ACCEPT
-
-$BIN -P INPUT ACCEPT
-$BIN6 -P INPUT ACCEPT
-
-# ICMP PING OFF
-echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_all
-
-$BIN -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-$BIN6 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-$BIN -A INPUT -p tcp -s 127.0.0.1 -j ACCEPT
-$BIN -A INPUT -p udp -s 127.0.0.1 -j ACCEPT
-
-$BIN -A INPUT -p tcp --dport $SSHPORT -m state --state NEW -j ACCEPT
-$BIN6 -A INPUT -p tcp --dport $SSHPORT -m state --state NEW -j ACCEPT
-
-$BIN -A INPUT -p tcp --dport 1000:5000 -m state --state NEW -j ACCEPT
-$BIN6 -A INPUT -p tcp --dport 1000:5000 -m state --state NEW -j ACCEPT
-
-$BIN -A INPUT -p tcp --dport 80 -m state --state NEW -j ACCEPT
-$BIN6 -A INPUT -p tcp --dport 80 -m state --state NEW -j ACCEPT
-
-$BIN -A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT
-$BIN6 -A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT
-
-$BIN -I INPUT -p udp --dport 443 -j ACCEPT
-$BIN6 -I INPUT -p udp --dport 443 -j ACCEPT
-
-$BIN -A INPUT -p tcp --dport 113 -m state --state NEW -j ACCEPT
-$BIN6 -A INPUT -p tcp --dport 113 -m state --state NEW -j ACCEPT
-
-$BIN -I INPUT -p udp --dport 53 -j ACCEPT
-$BIN6 -I INPUT -p udp --dport 53 -j ACCEPT
-
-$BIN -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
-$BIN -A OUTPUT -p icmp --icmp-type echo-reply -j ACCEPT
-
-# Additional security enhancements
-$BIN -A INPUT -p tcp --syn -m limit --limit 1/s --limit-burst 3 -j ACCEPT
-$BIN6 -A INPUT -p tcp --syn -m limit --limit 1/s --limit-burst 3 -j ACCEPT
-
-$BIN -A INPUT -p tcp -j REJECT --reject-with tcp-reset
-$BIN -A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
-
-$BIN6 -A INPUT -p tcp -j REJECT --reject-with tcp-reset
-$BIN6 -A INPUT -p udp -j REJECT --reject-with icmp6-port-unreachable
-
-$BIN -A INPUT -p tcp -j DROP
-$BIN -A INPUT -p udp -j DROP
-
-$BIN6 -A INPUT -p tcp -j DROP
-$BIN6 -A INPUT -p udp -j DROP
-}
-
-# Funkcja aktualizująca reguły iptables
-update_iptables_rules() {
-    # Czyszczenie starych reguł
-
-    while IFS=" " read -r user limit_ipv4 limit_ipv6; do
-        if [ -n "$user" ]; then
-            uid=$(id -u "$user")
-
-            # Dodawanie reguł dla IPv4
-            iptables -A OUTPUT -p tcp -m owner --uid-owner $uid -m connlimit --connlimit-above $limit_ipv4 -m multiport --dport $IRC_PORTS -m conntrack --ctstate NEW -j REJECT
-            ip6tables -A OUTPUT -p tcp -m owner --uid-owner $uid -m connlimit --connlimit-above $limit_ipv6 -m multiport --dport $IRC_PORTS -m conntrack --ctstate NEW -j REJECT
-        fi
-    done < $LIMIT_FILE
-}
-
-firewall
-update_iptables_rules
-
-while true; do
-    # Porównywanie oryginalnego pliku z kopią
-    if ! cmp -s "$LIMIT_FILE" "$LIMIT_FILE_COPY"; then
-        firewall
-        update_iptables_rules
-        cp "$LIMIT_FILE" "$LIMIT_FILE_COPY"
-    fi
-    sleep 60
-done
-
-EOF
-chmod +x /etc/limit_irc.sh >/dev/null 2>&1
-tt "tahioN:${cyan} Tworzę plik zawierający limity irc per user (/etc/limit_irc.db)"
-if [ ! -f /etc/limit_irc.db ]; then
-touch /etc/limit_irc.db >/dev/null 2>&1
-if [ ! -s /etc/limit_irc.db ]; then
-  echo -e "root 99 99" >> /etc/limit_irc.db
-fi
-fi
-tt "Tworzę usługę systemową dla limitowania połączeń"
-
-SERVICE_NAME="irc_limit"
-SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
-SCRIPT_PATH="/etc/limit_irc.sh"
-
-# Tworzenie pliku usługi systemd
-cat > "${SERVICE_FILE}" << EOF
-[Unit]
-Description=IRC Connection Limit Daemon
-After=network.target
-
-[Service]
-Type=simple
-User=root
-ExecStart=${SCRIPT_PATH}
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Nadawanie uprawnień wykonywania dla skryptu limitującego
-chmod +x ${SCRIPT_PATH} 
-
-# Przeładowanie konfiguracji systemd
-systemctl daemon-reload
-
-# Włączanie usługi, aby uruchamiała się podczas startu systemu
-systemctl enable ${SERVICE_NAME}
-
-# Uruchamianie usługi
-systemctl start ${SERVICE_NAME}
-
-tt "Usługa ${SERVICE_NAME} została utworzona, włączona i uruchomiona."
-
-}
 
 do_update()
 {
-#!/bin/bash
-
-tt "tahioN:${cyan} Pobieram plik aktualizujący pliki binarne"
 pushd /root/ >> /dev/null
 # Stałe
-URL="https://github.com/kofany/tahioN/raw/main/update.tar.gz" # Zmień na prawidłowy URL
+URL="${GITHUB_URL}/kofany/tahioN/raw/main/update.tar.gz"
 DOWNLOAD_FILE="update.tar.gz"
 UPDATE_DIR="update"
 
-tt "tahioN:${cyan} Pobieram plik z binarkami do aktualizacji"
 wget -q "${URL}" -O "${DOWNLOAD_FILE}" >/dev/null 2>&1
 
 if [ $? -eq 0 ]; then
-    tt "tahioN:${cyan} Pobrano plik"
-else
-    tt "tahioN:${cyan} Błąd pobierania pliku"
-    exit 1
-fi
+    tar -xzf "${DOWNLOAD_FILE}" >/dev/null 2>&1
 
-sleep 1.5
+    if [ $? -eq 0 ]; then
+        # Wejście do folderu update
+        pushd /root/${UPDATE_DIR} >/dev/null 2>&1
+        # Pobranie listy plików
+        FILES_LIST=$(ls)
 
-tt "tahioN:${cyan} Rozpakowuję pobrany plik"
-tar -xzf "${DOWNLOAD_FILE}" >/dev/null 2>&1
+        # Przenoszenie plików
+        for FILE in ${FILES_LIST}; do
+            if [ -f "/bin/${FILE}" ]; then
+                rm -rf "/bin/${FILE}" >/dev/null 2>&1
+            fi
+            cp "${FILE}" "/bin/${FILE}" >/dev/null 2>&1
+            chmod +x "/bin/${FILE}" >/dev/null 2>&1
+        done
 
-if [ $? -eq 0 ]; then
-    tt "tahioN:${cyan} Rozpakowano plik"
-else
-    tt "tahioN:${cyan} Błąd rozpakowywania pliku"
-    exit 1
-fi
-
-# Wejście do folderu update
-pushd /root/${UPDATE_DIR} >/dev/null 2>&1
-# Pobranie listy plików
-FILES_LIST=$(ls)
-
-# Przenoszenie plików
-tt "tahioN:${cyan} Instalowanie plików binarnych"
-for FILE in ${FILES_LIST}; do
-    if [ -f "/bin/${FILE}" ]; then
-        rm -rf "/bin/${FILE}" >/dev/null 2>&1
-        tt "Usuwam stary plik ${cyan}/bin/${FILE}"
-        sleep 0.5
+        rm -rf /root/upda* >/dev/null 2>&1
     fi
-    tt "Kopiuję nowy plik ${cyan}${FILE}"
-    cp "${FILE}" "/bin/${FILE}" >/dev/null 2>&1
-    chmod +x "/bin/${FILE}" >/dev/null 2>&1
-    sleep 0.5
-done
-
-rm -rf /root/upda* >/dev/null 2>&1
-tt "tahioN:${cyan} Pliki binarne zainstalowane"
-sleep 1.5
+fi
 
 }
+
+do_admin()
+{
+# Funkcja generująca losowe hasło
+generate_random_password() {
+    cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1
+}
+
+# Pytanie użytkownika czy chce utworzyć konta
+echo -e "\n${yellow}Czy chcesz utworzyć konta użytkowników z uprawnieniami sudo? [t/n]${NC}"
+read -r create_accounts
+
+if [[ ! "$create_accounts" =~ ^[tT]$ ]]; then
+    tt "${green}Pomijam tworzenie kont administratorów."
+    return 0
+fi
+
+# Pytanie o nazwy użytkowników
+echo -e "\n${yellow}Podaj nazwy użytkowników (oddzielone spacją, np: user1 user2 user3):${NC}"
+read -r user_input
+
+# Zamiana inputu na tablicę
+IFS=' ' read -ra users <<< "$user_input"
+
+if [ ${#users[@]} -eq 0 ]; then
+    tt "${red}Nie podano żadnych nazw użytkowników. Pomijam tworzenie kont."
+    return 0
+fi
+
+# Deklaracja tablicy asocjacyjnej dla haseł
+declare -A user_passwords
+
+# Tworzenie użytkowników
+echo -e "\n${green}=== Tworzenie użytkowników ===${NC}\n"
+
+for user in "${users[@]}"; do
+    # Walidacja nazwy użytkownika (tylko alfanumeryczne i podkreślnik)
+    if ! [[ "$user" =~ ^[a-z_][a-z0-9_-]*$ ]]; then
+        tt "${red}Nieprawidłowa nazwa użytkownika: ${user}. Pomijam."
+        continue
+    fi
+
+    if id -u "${user}" >/dev/null 2>&1; then
+        tt "${yellow}Użytkownik ${user} już istnieje. Pomijam."
+    else
+        password=$(generate_random_password)
+        # Twórz użytkownika z zsh jako domyślnym shellem
+        useradd -m -s /bin/zsh "${user}"
+        echo "${user}:${password}" | chpasswd
+        user_passwords["${user}"]=${password}
+
+        # Power user setup - Powerlevel10k dla sudo users
+        if [ -f /home/${user}/.zshrc ]; then
+            # Backup original
+            cp /home/${user}/.zshrc /home/${user}/.zshrc.backup
+
+            # Create new .zshrc with p10k instant prompt at the top
+            {
+                echo '# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.'
+                echo 'if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then'
+                echo '  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"'
+                echo 'fi'
+                echo ''
+                cat /home/${user}/.zshrc.backup
+            } > /home/${user}/.zshrc
+
+            # Add p10k to zinit (after zinit source line)
+            sed -i '/source.*zinit.zsh/a \\n# Add in Powerlevel10k\nzinit ice depth=1; zinit light romkatv\/powerlevel10k' /home/${user}/.zshrc
+
+            # Add p10k config source at the end
+            echo -e "\n# To customize prompt, run \`p10k configure\` or edit ~/.p10k.zsh.\n[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh" >> /home/${user}/.zshrc
+
+            chown ${user}:${user} /home/${user}/.zshrc
+            rm /home/${user}/.zshrc.backup
+        fi
+
+        # Copy p10k config
+        if [ -f /root/.p10k.zsh ]; then
+            cp /root/.p10k.zsh /home/${user}/.p10k.zsh
+            chown ${user}:${user} /home/${user}/.p10k.zsh
+        fi
+
+        tt "${green}Użytkownik ${user} został utworzony z zsh + Powerlevel10k."
+    fi
+done
+
+# Dodanie uprawnień sudo
+if [ ${#user_passwords[@]} -gt 0 ]; then
+    echo -e "\n${green}=== Dodawanie uprawnień sudo ===${NC}\n"
+
+    for user in "${!user_passwords[@]}"; do
+        if grep -q -E "^${user}\s" /etc/sudoers; then
+            tt "${yellow}Użytkownik ${user} ma już uprawnienia sudo."
+        else
+            echo -e "${user} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
+            tt "${green}Użytkownik ${user} otrzymał uprawnienia sudo."
+        fi
+    done
+
+    # Wyświetlenie danych logowania
+    external_ip=$(curl -s https://ipinfo.io/ip)
+
+    echo -e "\n${green}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${green}║          DANE LOGOWANIA DO UTWORZONYCH KONT               ║${NC}"
+    echo -e "${green}╠════════════════════════════════════════════════════════════╣${NC}"
+    echo -e "${green}║${NC} Adres IP serwera: ${cyan}${external_ip}${NC}"
+    echo -e "${green}║${NC} Port SSH:         ${cyan}${SSH_PORT}${NC}"
+    echo -e "${green}╠════════════════════════════════════════════════════════════╣${NC}"
+
+    for user in "${!user_passwords[@]}"; do
+        echo -e "${green}║${NC} Użytkownik: ${yellow}${user}${NC}"
+        echo -e "${green}║${NC} Hasło:      ${cyan}${user_passwords["${user}"]}${NC}"
+        echo -e "${green}╠════════════════════════════════════════════════════════════╣${NC}"
+    done
+
+    echo -e "${green}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo -e "\n${red}WAŻNE: Zapisz te dane w bezpiecznym miejscu!${NC}\n"
+
+else
+    tt "${yellow}Nie utworzono żadnych nowych użytkowników."
+fi
+
+}
+
 
 
 end_of_all() {
@@ -1179,78 +1472,70 @@ sleep 1.5
 }
 
 banner
-pipe_name="mypipe"
 
-if [[ -e $pipe_name ]]; then
-    rm $pipe_name
-fi
-mkfifo $pipe_name
-{
+# Inicjalizacja systemu progress bar
+init_tasks
+
+# Uruchom instalację z progress barem
 clear
-echo -e ""
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
-tt "tahioN:${cyan} Tworzę spinner ...."
-sleep 0.5
+
+# Task 0: IPv6 network detection & GitHub proxy setup
+start_task 0
+do_ipv6_setup >/dev/null 2>&1
+complete_task 0
+
+# Task 1: APT repository synchronization & package matrix
+start_task 1
+do_apt >/dev/null 2>&1
+complete_task 1
+
+# Task 2: Zsh + modern CLI tools deployment
+start_task 2
+do_zsh_setup >/dev/null 2>&1
+complete_task 2
+
+# Task 3: SSH hardening & Fail2Ban protection matrix
+start_task 3
+do_sshd_f2b >/dev/null 2>&1
+complete_task 3
+
+# Task 4: MOTD cyberpunk matrix deployment
+start_task 4
+do_motd_cyberpunk >/dev/null 2>&1
+complete_task 4
+
+# Task 5: BIND9 DNS server configuration
+start_task 5
+do_bind >/dev/null 2>&1
+complete_task 5
+
+# Task 6: Eggdrop bot assembly v1.8.4
+start_task 6
+do_egg >/dev/null 2>&1
+complete_task 6
+
+# Task 7: Psotnic bot deployment sequence
+start_task 7
+do_post >/dev/null 2>&1
+complete_task 7
+
+# Task 8: KNB bot initialization protocol
+start_task 8
+do_knb >/dev/null 2>&1
+complete_task 8
+
+# Task 9: Binary update & system finalization
+start_task 9
+do_update >/dev/null 2>&1
+complete_task 9
+
+# Finalne wyświetlenie progress bara (100%)
 sleep 1
-tt "tahioN:${cyan} Aktualizację apt i instaluję potrzebne pakiety (w tle, czekaj cierpliwe)"
-do_apt 
-tt "tahioN:${cyan} motd i promt"
-do_motd 
-tt "tahioN:${cyan} sshd_config i fail2ban"
-do_sshd_f2b 
-tt "tahioN:${cyan} bind9"
-do_bind 
-tt "tahioN:${cyan} Instalacja eggdrop"
-do_egg 
-tt "tahioN:${cyan} Instalacja psotnic"
-do_post
-tt "tahioN:${cyan} Instalacja knb"
-do_knb
-tt "tahioN:${cyan} Instalacja firewall"
-do_fw 
-tt "tahioN:${cyan} plików binarnych (w tle, czekaj cierpliwie)"
-do_update 
-tt "tahioN:${cyan} zadania zakończone, za 5 sekund zamykam spinner"
-sleep 5
-echo ""
-echo "END_SPIN"
-} > $pipe_name &
-spinner < $pipe_name
-rm $pipe_name
+tput cnorm
 clear
+
+# Interaktywne tworzenie kont administratorów (po zakończeniu instalacji)
+do_admin
+
 end_of_all
-rm_file "/etc/nftables.conf"
-cp /bin/vhosts /bin/vh
-chmod +x /bin/vh
-sleep 5
+sleep 3

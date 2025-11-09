@@ -1,0 +1,100 @@
+#!/bin/bash
+###############################################
+##  tahioN - IRC Shell Matrix                ##
+##  (c) kofany & yooz                        ##
+###############################################
+
+# Cyberpunk color scheme
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+
+# Cyberpunk prompt
+PRM="${CYAN}║${NC} ${YELLOW}⚡${NC} "
+
+# Root check
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ ACCESS DENIED ⚡${CYAN}]${NC}"
+    echo -e "${PRM}${RED}Root privileges required${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}tahioN security${CYAN}]${NC}"
+    exit 1
+fi
+
+# Interrupt handler
+trap 'echo -e "\n${PRM}${YELLOW}⧗ Operation terminated${NC}"; exit 0' INT
+
+# Username validation
+if [ -z "${1}" ]; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN USER_DEL ⚡${CYAN}]${NC}"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${RED}✗ ACCESS DENIED${NC} :: No username provided"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}Usage: del <username>"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+    exit 1
+fi
+
+username=$@
+
+# Check if user exists
+if ! id "${username}" &>/dev/null; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN USER_DEL ⚡${CYAN}]${NC}"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${RED}✗ ACCESS DENIED${NC} :: User does not exist in the matrix"
+    echo -e "${PRM}${CYAN}➜${NC} Username: ${YELLOW}${username}${NC}"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+    exit 1
+fi
+
+# Cyberpunk confirmation
+echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN USER_DEL ⚡${CYAN}]${NC}"
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${RED}⧗ WARNING${NC} :: This will permanently remove user from the matrix"
+echo -e "${PRM}${CYAN}➜${NC} Target: ${YELLOW}${username}${NC}"
+echo -e "${CYAN}║${NC}"
+
+while true; do
+    echo -ne "${PRM}${RED}Terminate user? [y/n]${NC} "
+    read -r -s -N 1 REPLY
+    echo ""
+
+    if [ "${REPLY}" = "n" ]; then
+        echo -e "${CYAN}║${NC}"
+        echo -e "${PRM}${YELLOW}⧗ Termination cancelled${NC}"
+        echo -e "${CYAN}║${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        exit 0
+    elif [ "${REPLY}" = "y" ]; then
+        break
+    fi
+done
+
+# Delete user
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${GREEN}✓ ACCESS GRANTED${NC} :: Initiating user termination"
+echo -e "${CYAN}║${NC}"
+
+# Kill user processes
+echo -e "${PRM}${YELLOW}⚙${NC} Terminating all user processes"
+pkill -9 -u ${username}
+
+# Remove history file attributes
+echo -e "${PRM}${YELLOW}⚙${NC} Cleaning history files"
+chattr -a /home/${username}/.bash_history 2>/dev/null || true
+chattr -a /home/${username}/.zsh_history 2>/dev/null || true
+
+# Delete user and home directory
+echo -e "${PRM}${YELLOW}⚙${NC} Removing home directory /home/${username}"
+/usr/sbin/userdel -r ${username}
+
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${GREEN}✓${NC} User ${YELLOW}${username}${NC} deleted from the system"
+echo -e "${CYAN}║${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+
+exit 0

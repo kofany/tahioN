@@ -1,0 +1,90 @@
+#!/bin/bash
+###############################################
+##  tahioN - IRC Shell Matrix                ##
+##  (c) kofany & yooz                        ##
+###############################################
+
+# Cyberpunk color scheme
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+
+# Cyberpunk prompt
+PRM="${CYAN}║${NC} ${YELLOW}⚡${NC} "
+
+# Root check
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ ACCESS DENIED ⚡${CYAN}]${NC}"
+    echo -e "${PRM}${RED}Root privileges required${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}tahioN security${CYAN}]${NC}"
+    exit 1
+fi
+
+# Interrupt handler
+trap 'echo -e "\n${PRM}${YELLOW}⧗ Operation terminated${NC}"; exit 0' INT
+
+# Username validation
+if [ -z "${1}" ]; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN BLOCK ⚡${CYAN}]${NC}"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${RED}✗ ACCESS DENIED${NC} :: No username provided"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}Usage: block <username>"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+    exit 1
+fi
+
+username=${1}
+
+# Check if user exists
+if ! id "${username}" &>/dev/null; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN BLOCK ⚡${CYAN}]${NC}"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${RED}✗ ACCESS DENIED${NC} :: User does not exist in the matrix"
+    echo -e "${PRM}${CYAN}➜${NC} Username: ${YELLOW}${username}${NC}"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+    exit 1
+fi
+
+# Cyberpunk confirmation
+echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN BLOCK ⚡${CYAN}]${NC}"
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${YELLOW}⧗${NC} Suspending user access to the matrix"
+echo -e "${PRM}${CYAN}➜${NC} Target: ${YELLOW}${username}${NC}"
+echo -e "${CYAN}║${NC}"
+
+while true; do
+    echo -ne "${PRM}${YELLOW}Suspend user? [y/n]${NC} "
+    read -r -s -N 1 REPLY
+    echo ""
+
+    if [ "${REPLY}" = "n" ]; then
+        echo -e "${CYAN}║${NC}"
+        echo -e "${PRM}${YELLOW}⧗ Suspension cancelled${NC}"
+        echo -e "${CYAN}║${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        exit 0
+    elif [ "${REPLY}" = "y" ]; then
+        break
+    fi
+done
+
+# Block user
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${GREEN}✓ ACCESS GRANTED${NC} :: Initiating user suspension"
+echo -e "${CYAN}║${NC}"
+
+# Change shell to /bin/blocked
+chsh -s /bin/blocked "${username}"
+
+echo -e "${PRM}${YELLOW}⚙${NC} User shell changed to /bin/blocked"
+echo -e "${PRM}${GREEN}✓${NC} User ${YELLOW}${username}${NC} has been suspended"
+echo -e "${CYAN}║${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+
+exit 0

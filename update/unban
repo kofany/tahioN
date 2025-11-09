@@ -1,0 +1,78 @@
+#!/bin/bash
+###############################################
+##  tahioN - IRC Shell Matrix                ##
+##  (c) kofany & yooz                        ##
+###############################################
+
+# Cyberpunk color scheme
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+
+# Cyberpunk prompt
+PRM="${CYAN}║${NC} ${YELLOW}⚡${NC} "
+
+# Root check
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ ACCESS DENIED ⚡${CYAN}]${NC}"
+    echo -e "${PRM}${RED}Root privileges required${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}tahioN security${CYAN}]${NC}"
+    exit 1
+fi
+
+JAIL_NAME="sshd"
+
+# Main loop
+while true; do
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN FAIL2BAN_UNBAN ⚡${CYAN}]${NC}"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⚙${NC} Fetching banned IP list..."
+    echo -e "${CYAN}║${NC}"
+
+    # Get banned IPs
+    BANNED_IPS=$(sudo fail2ban-client status "$JAIL_NAME" | grep "Banned IP list" | sed -E 's/.*:\s+//')
+
+    if [ -z "$BANNED_IPS" ]; then
+        echo -e "${PRM}${GRAY}No banned IP addresses found${NC}"
+        echo -e "${CYAN}║${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        exit 0
+    fi
+
+    echo -e "${PRM}${CYAN}⬢${NC} BANNED IP ADDRESSES"
+    echo -e "${CYAN}║${NC}"
+
+    IPS_ARRAY=($BANNED_IPS)
+    for i in "${!IPS_ARRAY[@]}"; do
+        echo -e "${PRM}  ${YELLOW}$((i+1)))${NC} ${IPS_ARRAY[$i]}"
+    done
+
+    echo -e "${CYAN}║${NC}"
+    echo -ne "${PRM}${GREEN}Enter number to unban or 'q' to quit:${NC} "
+    read CHOICE
+
+    if [ "$CHOICE" == "q" ]; then
+        echo -e "${CYAN}║${NC}"
+        echo -e "${PRM}${YELLOW}⧗ Operation cancelled${NC}"
+        echo -e "${CYAN}║${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        exit 0
+    elif [[ "$CHOICE" =~ ^[0-9]+$ ]] && [ "$CHOICE" -ge 1 ] && [ "$CHOICE" -le "${#IPS_ARRAY[@]}" ]; then
+        IP_TO_UNBAN="${IPS_ARRAY[$((CHOICE-1))]}"
+        echo -e "${CYAN}║${NC}"
+        echo -e "${PRM}${GREEN}✓${NC} Unbanning IP: ${YELLOW}$IP_TO_UNBAN${NC}"
+        sudo fail2ban-client set "$JAIL_NAME" unbanip "$IP_TO_UNBAN"
+        echo -e "${CYAN}║${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo ""
+    else
+        echo -e "${CYAN}║${NC}"
+        echo -e "${PRM}${RED}✗ Invalid choice. Try again.${NC}"
+        echo -e "${CYAN}║${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo ""
+    fi
+done

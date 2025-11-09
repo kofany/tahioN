@@ -1,0 +1,54 @@
+#!/bin/bash
+###############################################
+##  tahioN - IRC Shell Matrix                ##
+##  (c) kofany & yooz                        ##
+###############################################
+
+# Cyberpunk color scheme
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+
+# Cyberpunk prompt
+PRM="${CYAN}║${NC} ${YELLOW}⚡${NC} "
+
+# Root check
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ ACCESS DENIED ⚡${CYAN}]${NC}"
+    echo -e "${PRM}${RED}Root privileges required${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}tahioN security${CYAN}]${NC}"
+    exit 1
+fi
+
+# Interrupt handler
+trap 'echo -e "\n${PRM}${YELLOW}⧗ Operation terminated${NC}"; exit 0' INT
+
+# Display blocked users
+echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN BLOCKED_USERS ⚡${CYAN}]${NC}"
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${YELLOW}⬢${NC} SUSPENDED ACCOUNTS"
+echo -e "${CYAN}║${NC}"
+
+# Get blocked users
+blocked_users=$(grep -r "blocked" /etc/passwd | cut -s -d : -f 1,3)
+
+if [ -z "$blocked_users" ]; then
+    echo -e "${PRM}${GRAY}No suspended accounts found${NC}"
+else
+    echo "$blocked_users" | while IFS=: read -r username uid; do
+        echo -e "${PRM}${YELLOW}${username}${NC}${GRAY}    UID: ${uid}${NC}"
+    done
+fi
+
+echo -e "${CYAN}║${NC}"
+
+# Count total
+total=$(echo "$blocked_users" | grep -c "." || echo "0")
+echo -e "${PRM}${CYAN}⚙${NC} Total: ${YELLOW}${total}${NC} suspended accounts"
+echo -e "${CYAN}║${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+
+exit 0

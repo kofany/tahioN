@@ -1,0 +1,177 @@
+#!/bin/bash
+###############################################
+##  tahioN - IRC Shell Matrix                ##
+##  (c) kofany & yooz                        ##
+###############################################
+
+# Cyberpunk color scheme
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+
+# Cyberpunk prompt
+PRM="${CYAN}║${NC} ${YELLOW}⚡${NC} "
+
+username=$(whoami)
+
+# Check home directory
+if [ "${HOME}" != "/home/${username}" ]; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ ACCESS DENIED ⚡${CYAN}]${NC}"
+    echo -e "${PRM}${RED}Invalid home directory${NC}"
+    echo -e "${PRM}${GRAY}Expected: /home/${username}${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}tahioN security${CYAN}]${NC}"
+    exit 1
+fi
+
+# Interrupt handler
+trap 'echo -e "\n${PRM}${YELLOW}⧗ Operation terminated${NC}"; exit 0' INT
+
+# Display deployment prompt
+echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN PSOTNIC_DEPLOY ⚡${CYAN}]${NC}"
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${YELLOW}⚙${NC} Deploying Psotnic IRC bot to your home directory"
+echo -e "${PRM}${CYAN}➜${NC} Target: ${YELLOW}/home/${username}/psotnic/${NC}"
+echo -e "${CYAN}║${NC}"
+
+while true; do
+    echo -ne "${PRM}${GREEN}Install Psotnic files? [y/n]${NC} "
+    read -r -s -N 1 REPLY
+    echo ""
+
+    if [ "${REPLY}" = "n" ]; then
+        echo -e "${CYAN}║${NC}"
+        echo -e "${PRM}${YELLOW}⧗ Deployment cancelled${NC}"
+        echo -e "${CYAN}║${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        exit 0
+    elif [ "${REPLY}" = "y" ]; then
+        break
+    fi
+done
+
+# Check if psotnic directory exists
+pushd "/home/${username}/" &>/dev/null
+FILE="$(pwd)/psotnic/"
+
+if [ -e "${FILE}" ]; then
+    if [ ! -d "${FILE}" ]; then
+        echo -e "${CYAN}║${NC}"
+        echo -e "${PRM}${RED}✗ ACCESS DENIED${NC} :: Path exists but is not a directory"
+        echo -e "${CYAN}║${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        exit 1
+    fi
+
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⧗ WARNING${NC} :: Directory psotnic/ already exists"
+
+    while true; do
+        echo -ne "${PRM}${RED}Remove existing directory? [y/n]${NC} "
+        read -r -s -N 1 REPLY2
+        echo ""
+
+        if [ "${REPLY2}" = "n" ]; then
+            echo -e "${CYAN}║${NC}"
+            echo -e "${PRM}${YELLOW}⧗ Deployment cancelled${NC}"
+            echo -e "${CYAN}║${NC}"
+            echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+            exit 0
+        elif [ "${REPLY2}" = "y" ]; then
+            break
+        fi
+    done
+
+    rm -R "${FILE}"
+    if [ -d "${FILE}" ]; then
+        echo -e "${CYAN}║${NC}"
+        echo -e "${PRM}${RED}✗ ACCESS DENIED${NC} :: Failed to remove directory"
+        echo -e "${CYAN}║${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        exit 1
+    fi
+fi
+
+# Deploy Psotnic
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${GREEN}✓ ACCESS GRANTED${NC} :: Creating bot matrix"
+echo -e "${CYAN}║${NC}"
+
+mkdir "/home/${username}/psotnic"
+chown -R ${username} "/home/${username}/psotnic/"
+chmod 711 "/home/${username}/psotnic/"
+pushd "/home/${username}/psotnic/" &>/dev/null
+
+# Create hub config
+cat <<'EOF' >> /home/${username}/psotnic/conf.hub
+nick            hub
+nickappend      _-^`|
+realname        Psotnic C++ Edition
+myipv4          0.0.0.0
+vhost           0.0.0.0
+listen          9000
+
+server          150.254.64.64 6667
+server          193.219.28.242 6667
+server          212.182.63.110 6667
+server          149.156.124.222 6667
+
+ownerpass       24e70511c32ad46bf53302a9717c651b
+EOF
+
+# Create leaf config
+cat <<'EOF' >> /home/${username}/psotnic/conf.leaf
+nick            leaf
+nickappend      _-^`|
+realname        Psotnic C++ Edition
+myipv4          0.0.0.0
+vhost           0.0.0.0
+
+hub             212.76.54.135 8000 leafpassword
+
+server          irc.stealth.net 6667
+
+keepnick        0
+EOF
+
+# Create slave config
+cat <<'EOF' >> /home/${username}/psotnic/conf.slave
+nick            slave1
+nickappend      _-^`|
+realname        Psotnic C++ Edition
+myipv4          0.0.0.0
+vhost           0.0.0.0
+
+hub             212.76.54.135 9000 slave1password
+listen          8000
+
+server          212.76.54.135 6667
+
+keepnick        1
+EOF
+
+# Set permissions
+directory="/home/${username}/psotnic"
+for file in $(ls "${directory}"); do
+    chown -R "${username}" "${directory}/${file}"
+    chmod 711 "${directory}/${file}"
+done
+
+echo -e "${PRM}${YELLOW}⚙${NC} Generating config templates (hub, leaf, slave)"
+echo -e "${PRM}${YELLOW}⚙${NC} Setting permissions (711)"
+echo -e "${PRM}${GREEN}✓${NC} Deployment complete"
+echo -e "${CYAN}║${NC}"
+
+ls -n
+
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${CYAN}⬢${NC} USAGE"
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}  ${GREEN}➜${NC} Run: ${YELLOW}psotnic -c yourconfig.cnf${NC}"
+echo -e "${PRM}  ${GREEN}➜${NC} Port range: ${CYAN}1000-5000${NC}"
+echo -e "${CYAN}║${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+
+exit 0

@@ -1,0 +1,29 @@
+#!/bin/bash
+###############################################
+##  tahioN - IRC Shell Matrix                ##
+##  (c) kofany & yooz                        ##
+###############################################
+
+# Cyberpunk color scheme
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+
+# Cyberpunk prompt
+PRM="${CYAN}║${NC} ${YELLOW}⚡${NC} "
+
+# Deprecation warning
+echo -e "${CYAN}╔═══[${YELLOW}⚡ DEPRECATED ⚡${CYAN}]${NC}"
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${RED}⧗ WARNING${NC} :: This tool is deprecated"
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}IRC connection limiting is no longer used in tahioN."
+echo -e "${PRM}This script is kept for backwards compatibility only."
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}Please use modern connection management tools."
+echo -e "${CYAN}║${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+
+exit 1

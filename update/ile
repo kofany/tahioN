@@ -1,0 +1,66 @@
+#!/bin/bash
+###############################################
+##  tahioN - IRC Shell Matrix                ##
+##  (c) kofany & yooz                        ##
+###############################################
+
+# Cyberpunk color scheme
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+
+# Cyberpunk prompt
+PRM="${CYAN}║${NC} ${YELLOW}⚡${NC} "
+
+# Root check
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ ACCESS DENIED ⚡${CYAN}]${NC}"
+    echo -e "${PRM}${RED}Root privileges required${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}tahioN security${CYAN}]${NC}"
+    exit 1
+fi
+
+# Interrupt handler
+trap 'echo -e "\n${PRM}${YELLOW}⧗ Operation terminated${NC}"; exit 0' INT
+
+# Display IRC connections
+echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN IRC_MONITOR ⚡${CYAN}]${NC}"
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${YELLOW}⬢${NC} ACTIVE IRC CONNECTIONS ${GRAY}(ports 6660-6669)${NC}"
+echo -e "${CYAN}║${NC}"
+
+# Show all connections
+lsof -n -iTCP:6660-6669
+
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${CYAN}⚙${NC} PROCESS STATISTICS"
+echo -e "${CYAN}║${NC}"
+
+# Count by process
+echo -e "${PRM}  ${GREEN}➜${NC} irssi     : ${YELLOW}[$(lsof -n -iTCP:6660-6669 | grep irssi | wc -l)]${NC}"
+echo -e "${PRM}  ${GREEN}➜${NC} psotnic   : ${YELLOW}[$(lsof -n -iTCP:6660-6669 | grep psotnic | wc -l)]${NC}"
+echo -e "${PRM}  ${GREEN}➜${NC} ZNC       : ${YELLOW}[$(lsof -n -iTCP:6660-6669 | grep znc | wc -l)]${NC}"
+echo -e "${PRM}  ${GREEN}➜${NC} BitchX    : ${YELLOW}[$(lsof -n -iTCP:6660-6669 | grep BitchX | wc -l)]${NC}"
+echo -e "${PRM}  ${GREEN}➜${NC} Eggdrop   : ${YELLOW}[$(lsof -n -iTCP:6660-6669 | grep eggdrop | wc -l)]${NC}"
+echo -e "${PRM}  ${GREEN}➜${NC} WeeChat   : ${YELLOW}[$(lsof -n -iTCP:6660-6669 | grep weechat | wc -l)]${NC}"
+
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${CYAN}⬢${NC} PROTOCOL STATISTICS"
+echo -e "${CYAN}║${NC}"
+
+# Count by protocol
+ipv6_count=$(lsof -n -iTCP:6660-6669 | grep IPv6 | wc -l)
+ipv4_count=$(lsof -n -iTCP:6660-6669 | grep IPv4 | wc -l)
+total_count=$(lsof -n -iTCP:6660-6669 | awk '{print $1}' | wc -l)
+
+echo -e "${PRM}  ${GREEN}➜${NC} IPv6 connections : ${YELLOW}${ipv6_count}${NC}"
+echo -e "${PRM}  ${GREEN}➜${NC} IPv4 connections : ${YELLOW}${ipv4_count}${NC}"
+echo -e "${PRM}  ${GREEN}➜${NC} Total            : ${YELLOW}${total_count}${NC}"
+
+echo -e "${CYAN}║${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+
+exit 0

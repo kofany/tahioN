@@ -1,0 +1,51 @@
+#!/bin/bash
+###############################################
+##  tahioN - IRC Shell Matrix                ##
+##  (c) kofany & yooz                        ##
+###############################################
+
+# Cyberpunk color scheme
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+
+# Cyberpunk prompt
+PRM="${CYAN}║${NC} ${YELLOW}⚡${NC} "
+
+# Root check
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ ACCESS DENIED ⚡${CYAN}]${NC}"
+    echo -e "${PRM}${RED}Root privileges required${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}tahioN security${CYAN}]${NC}"
+    exit 1
+fi
+
+# Interrupt handler
+trap 'echo -e "\n${PRM}${YELLOW}⧗ Operation terminated${NC}"; exit 0' INT
+
+# Display DDoS check
+echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN DDOS_MONITOR ⚡${CYAN}]${NC}"
+echo -e "${CYAN}║${NC}"
+echo -e "${PRM}${YELLOW}⚙${NC} Checking for SYN_RECV connections..."
+echo -e "${CYAN}║${NC}"
+
+# Get SYN_RECV IPs
+syn_ips=$(netstat -np | grep SYN_RECV | awk '{print $5}' | awk -F: '{print $1}')
+
+if [ -z "$syn_ips" ]; then
+    echo -e "${PRM}${GREEN}✓${NC} No suspicious activity detected"
+else
+    echo -e "${PRM}${RED}⧗ WARNING${NC} :: SYN_RECV connections detected"
+    echo -e "${CYAN}║${NC}"
+    echo "$syn_ips" | while read ip; do
+        echo -e "${PRM}  ${YELLOW}➜${NC} ${ip}"
+    done
+fi
+
+echo -e "${CYAN}║${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+
+exit 0
