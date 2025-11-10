@@ -35,6 +35,6 @@ echo -e "${CYAN}║${NC}"
 nft list ruleset
 
 echo -e "${CYAN}║${NC}"
-echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
 
 exit 0

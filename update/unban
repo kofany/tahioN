@@ -38,7 +38,7 @@ while true; do
     if [ -z "$BANNED_IPS" ]; then
         echo -e "${PRM}${GRAY}No banned IP addresses found${NC}"
         echo -e "${CYAN}║${NC}"
-        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
         exit 0
     fi
 
@@ -58,7 +58,7 @@ while true; do
         echo -e "${CYAN}║${NC}"
         echo -e "${PRM}${YELLOW}⧗ Operation cancelled${NC}"
         echo -e "${CYAN}║${NC}"
-        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
         exit 0
     elif [[ "$CHOICE" =~ ^[0-9]+$ ]] && [ "$CHOICE" -ge 1 ] && [ "$CHOICE" -le "${#IPS_ARRAY[@]}" ]; then
         IP_TO_UNBAN="${IPS_ARRAY[$((CHOICE-1))]}"
@@ -66,13 +66,13 @@ while true; do
         echo -e "${PRM}${GREEN}✓${NC} Unbanning IP: ${YELLOW}$IP_TO_UNBAN${NC}"
         sudo fail2ban-client set "$JAIL_NAME" unbanip "$IP_TO_UNBAN"
         echo -e "${CYAN}║${NC}"
-        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
         echo ""
     else
         echo -e "${CYAN}║${NC}"
         echo -e "${PRM}${RED}✗ Invalid choice. Try again.${NC}"
         echo -e "${CYAN}║${NC}"
-        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
         echo ""
     fi
 done

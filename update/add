@@ -34,7 +34,7 @@ if [ -z "${1}" ]; then
     echo -e "${CYAN}║${NC}"
     echo -e "${PRM}Usage: add <username>"
     echo -e "${CYAN}║${NC}"
-    echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
     exit 1
 fi
 
@@ -56,7 +56,7 @@ while true; do
         echo -e "${CYAN}║${NC}"
         echo -e "${PRM}${YELLOW}⧗ Deployment cancelled${NC}"
         echo -e "${CYAN}║${NC}"
-        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
         exit 0
     elif [ "${REPLY}" = "y" ]; then
         break
@@ -68,7 +68,7 @@ if id "${username}" &>/dev/null; then
     echo -e "${CYAN}║${NC}"
     echo -e "${PRM}${RED}✗ ACCESS DENIED${NC} :: User already exists in the matrix"
     echo -e "${CYAN}║${NC}"
-    echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
     exit 1
 fi
 
@@ -122,6 +122,6 @@ echo -e "${PRM}${CYAN}╚══════════════════�
 echo -e "${CYAN}║${NC}"
 echo -e "${PRM}${RED}⧗ WARNING${NC} :: Save these credentials securely"
 echo -e "${CYAN}║${NC}"
-echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
 
 exit 0

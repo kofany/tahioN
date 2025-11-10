@@ -131,7 +131,7 @@ if [ "$1" = "pl" ]; then
     echo -e "${CYAN}║${NC}   ${GREEN}Fuzzy search wszędzie${NC}      - Szukaj plików/komend błyskawicznie"
     echo -e "${CYAN}║${NC}                                    Zintegrowane z każdą funkcją shella"
     echo -e "${CYAN}║${NC}"
-    echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
     exit 0
 fi
 
@@ -194,6 +194,6 @@ echo -e "${PRM}  ${GREEN}Fuzzy Search${NC}        - fzf integration everywhere"
 echo -e "${CYAN}║${NC}"
 
 # Footer
-echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
 
 exit 0

@@ -61,6 +61,6 @@ echo -e "${PRM}  ${GREEN}➜${NC} IPv4 connections : ${YELLOW}${ipv4_count}${NC}
 echo -e "${PRM}  ${GREEN}➜${NC} Total            : ${YELLOW}${total_count}${NC}"
 
 echo -e "${CYAN}║${NC}"
-echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
 
 exit 0

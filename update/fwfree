@@ -23,6 +23,6 @@ nft flush ruleset
 
 echo -e "${PRM}${YELLOW}⚙${NC} Ruleset flushed"
 echo -e "${CYAN}║${NC}"
-echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
 
 exit 0

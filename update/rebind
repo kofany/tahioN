@@ -32,6 +32,6 @@ rndc reload
 
 echo -e "${PRM}${GREEN}✓${NC} BIND9 reloaded successfully"
 echo -e "${CYAN}║${NC}"
-echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
 
 exit 0

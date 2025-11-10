@@ -46,7 +46,7 @@ while true; do
         echo -e "${CYAN}║${NC}"
         echo -e "${PRM}${YELLOW}⧗ Deployment cancelled${NC}"
         echo -e "${CYAN}║${NC}"
-        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
         exit 0
     elif [ "${REPLY}" = "y" ]; then
         break
@@ -62,7 +62,7 @@ if [ -e "${FILE}" ]; then
         echo -e "${CYAN}║${NC}"
         echo -e "${PRM}${RED}✗ ACCESS DENIED${NC} :: Path exists but is not a directory"
         echo -e "${CYAN}║${NC}"
-        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
         exit 1
     fi
 
@@ -78,7 +78,7 @@ if [ -e "${FILE}" ]; then
             echo -e "${CYAN}║${NC}"
             echo -e "${PRM}${YELLOW}⧗ Deployment cancelled${NC}"
             echo -e "${CYAN}║${NC}"
-            echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+            echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
             exit 0
         elif [ "${REPLY2}" = "y" ]; then
             break
@@ -90,7 +90,7 @@ if [ -e "${FILE}" ]; then
         echo -e "${CYAN}║${NC}"
         echo -e "${PRM}${RED}✗ ACCESS DENIED${NC} :: Failed to remove directory"
         echo -e "${CYAN}║${NC}"
-        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
         exit 1
     fi
 fi
@@ -119,6 +119,6 @@ echo -e "${CYAN}║${NC}"
 echo -e "${PRM}  ${GREEN}➜${NC} Run: ${YELLOW}eggdrop -m yourconfig.conf${NC}"
 echo -e "${PRM}  ${GREEN}➜${NC} Port range: ${CYAN}1000-5000${NC}"
 echo -e "${CYAN}║${NC}"
-echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
 
 exit 0

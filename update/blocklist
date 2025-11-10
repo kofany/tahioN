@@ -49,6 +49,6 @@ echo -e "${CYAN}║${NC}"
 total=$(echo "$blocked_users" | grep -c "." || echo "0")
 echo -e "${PRM}${CYAN}⚙${NC} Total: ${YELLOW}${total}${NC} suspended accounts"
 echo -e "${CYAN}║${NC}"
-echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
 
 exit 0

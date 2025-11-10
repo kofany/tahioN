@@ -24,6 +24,6 @@ echo -e "${PRM}This script is kept for backwards compatibility only."
 echo -e "${CYAN}║${NC}"
 echo -e "${PRM}Please use modern connection management tools."
 echo -e "${CYAN}║${NC}"
-echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
 
 exit 1

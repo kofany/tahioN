@@ -34,7 +34,7 @@ if [ -z "${1}" ]; then
     echo -e "${CYAN}║${NC}"
     echo -e "${PRM}Usage: del <username>"
     echo -e "${CYAN}║${NC}"
-    echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
     exit 1
 fi
 
@@ -47,7 +47,7 @@ if ! id "${username}" &>/dev/null; then
     echo -e "${PRM}${RED}✗ ACCESS DENIED${NC} :: User does not exist in the matrix"
     echo -e "${PRM}${CYAN}➜${NC} Username: ${YELLOW}${username}${NC}"
     echo -e "${CYAN}║${NC}"
-    echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
     exit 1
 fi
 
@@ -67,7 +67,7 @@ while true; do
         echo -e "${CYAN}║${NC}"
         echo -e "${PRM}${YELLOW}⧗ Termination cancelled${NC}"
         echo -e "${CYAN}║${NC}"
-        echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+        echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
         exit 0
     elif [ "${REPLY}" = "y" ]; then
         break
@@ -95,6 +95,6 @@ echo -e "${PRM}${YELLOW}⚙${NC} Removing home directory /home/${username}"
 echo -e "${CYAN}║${NC}"
 echo -e "${PRM}${GREEN}✓${NC} User ${YELLOW}${username}${NC} deleted from the system"
 echo -e "${CYAN}║${NC}"
-echo -e "${CYAN}╚═══════════════════[${GRAY}kofany & yooz${CYAN}]${NC}"
+echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
 
 exit 0
