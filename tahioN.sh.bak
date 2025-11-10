@@ -36,10 +36,9 @@ tt() {
 # Globalne zmienne dla progress bar
 declare -a TASKS_NAMES
 declare -a TASKS_STATUS  # 0=pending, 1=in_progress, 2=completed
-CURRENT_TASK_IDX=0
 START_TIME=0
-SPINNER_PID=0
 SPINNER_CHARS='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+SPINNER_CURRENT_CHAR="${SPINNER_CHARS:0:1}"
 
 # Inicjalizacja tasków - Cyberpunk edition
 init_tasks() {
@@ -85,8 +84,9 @@ draw_progress() {
     local minutes=$((elapsed / 60))
     local seconds=$((elapsed % 60))
 
-    # Wyczyść ekran i ukryj kursor
-    clear
+    # Przesuń kursor na początek i wyczyść ekran (bez migotania)
+    tput cup 0 0
+    tput ed
     tput civis
 
     # Cyberpunk header z open-ended frame (no right border)
@@ -135,48 +135,17 @@ draw_progress() {
     echo -e "${cyan}╚═══════════════════════════[${metalic_gray}made with <3 by kofany & yooz${cyan}]${NC}"
 }
 
-# Spinner w tle
-spinner_animation() {
-    local idx=0
-    while true; do
-        SPINNER_CURRENT_CHAR="${SPINNER_CHARS:$idx:1}"
-        draw_progress
-        sleep 0.1
-        idx=$(( (idx + 1) % ${#SPINNER_CHARS} ))
-    done
-}
-
-# Start task
-start_task() {
+# Prosta funkcja bez UI - tylko wywołaj zadanie
+run_task_simple() {
     local task_idx=$1
-    CURRENT_TASK_IDX=$task_idx
-    TASKS_STATUS[$task_idx]=1
-    SPINNER_CURRENT_CHAR="${SPINNER_CHARS:0:1}"
+    shift
 
-    # Uruchom spinner w tle
-    spinner_animation &
-    SPINNER_PID=$!
+    # Uruchom funkcję BEZPOŚREDNIO - wszystkie błędy idą na terminal!
+    "$@"
+    local exit_code=$?
 
-    # Daj chwilę na wyświetlenie
-    sleep 0.2
+    return $exit_code
 }
-
-# Complete task
-complete_task() {
-    local task_idx=$1
-
-    # Zatrzymaj spinner
-    if [ $SPINNER_PID -ne 0 ]; then
-        kill $SPINNER_PID 2>/dev/null
-        wait $SPINNER_PID 2>/dev/null
-        SPINNER_PID=0
-    fi
-
-    TASKS_STATUS[$task_idx]=2
-    draw_progress
-    sleep 0.3
-}
-
 
 ####################################### Sprawdzanie root
 
@@ -314,10 +283,10 @@ if [ ! -d "/usr/local/share/zinit/zinit.git" ]; then
     mkdir -p /usr/local/share/zinit
     git clone ${GITHUB_URL}/zdharma-continuum/zinit.git /usr/local/share/zinit/zinit.git
 
-    # Weryfikacja czy zinit się zainstalował
+    # Weryfikuj czy instalacja się powiodła
     if [ ! -f "/usr/local/share/zinit/zinit.git/zinit.zsh" ]; then
         echo "ERROR: Failed to install zinit from ${GITHUB_URL}/zdharma-continuum/zinit.git" >&2
-        exit 1
+        return 1
     fi
 fi
 
@@ -475,6 +444,31 @@ ZSHRC
 
 # Upewnij się że /etc/skel/.zshrc ma odpowiednie uprawnienia
 chmod 644 /etc/skel/.zshrc
+
+# Konfiguracja dla użytkownika root (z Powerlevel10k)
+if [ ! -f /root/.zshrc ]; then
+    # Kopiuj bazową konfigurację
+    cp /etc/skel/.zshrc /root/.zshrc
+
+    # Dodaj Powerlevel10k instant prompt na początek
+    {
+        echo '# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.'
+        echo 'if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then'
+        echo '  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"'
+        echo 'fi'
+        echo ''
+        cat /root/.zshrc
+    } > /root/.zshrc.tmp && mv /root/.zshrc.tmp /root/.zshrc
+
+    # Dodaj Powerlevel10k do zinit (po linii source zinit.zsh)
+    sed -i '/source.*zinit.zsh/a \\n# Add in Powerlevel10k\nzinit ice depth=1; zinit light romkatv\/powerlevel10k' /root/.zshrc
+
+    # Dodaj p10k config source na końcu
+    echo -e "\n# To customize prompt, run \`p10k configure\` or edit ~/.p10k.zsh.\n[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh" >> /root/.zshrc
+fi
+
+# Zmień domyślny shell root na zsh
+chsh -s /bin/zsh root
 }
 
 ####################################### MOTD Cyberpunk - modułowy system /etc/update-motd.d/
@@ -486,12 +480,9 @@ mkdir -p /etc/tahion
 
 # Utwórz plik z reklamami/linkami (jeden link na linię)
 cat > /etc/tahion/ads.txt <<'ADS'
-∞ tb.tahio.eu - Free ipv6 tunnelbroker
 ⚡ erssi.org - Modern IRC Client
 ⬢ sshm.io - SSH Management Tool
-∞ tb.tahio.eu - Free ipv6 tunnelbroker
-⚡ erssi.org - Modern IRC Client
-∞ tb.tahio.eu - Free ipv6 tunnelbroker
+∞ tb.tahio.eu - TahioN Toolbox
 ADS
 
 # Wyłącz stare metody MOTD
@@ -502,15 +493,14 @@ rm -f /etc/profile.d/motd.sh
 # Wyczyść stare skrypty update-motd.d
 rm -f /etc/update-motd.d/*
 
-# Utwórz /etc/update-motd.d/00-header z cyberpunk stylem + rotating ads
+# Utwórz /etc/update-motd.d/00-header z cyberpunk stylem + rotating ads (BEZ ASCII banner)
 cat > /etc/update-motd.d/00-header <<'HEADER'
 #!/bin/bash
 
 # Kolory
-cyan='\e[36m'
-green='\e[32m'
-yellow='\e[33m'
-NC='\e[0m'
+cyan='\033[0;36m'
+yellow='\033[1;33m'
+NC='\033[0m'
 
 # Losuj reklamę z pliku ads.txt
 if [ -f /etc/tahion/ads.txt ]; then
@@ -519,15 +509,12 @@ else
     AD_LINE="⚡ tahioN IRC Shell Installer"
 fi
 
-# Pobierz informacje
-HOSTNAME=$(hostname -s)
-USERNAME=$(whoami)
-DATE=$(date "+%A, %d %B %Y")
-
-# Cyberpunk header
-echo -e "${cyan}╔═[ ${yellow}${HOSTNAME}${cyan} ]═══[ ${green}${AD_LINE}${cyan}"
-echo -e "${cyan}║${NC} ${yellow}⚡ ACCESS GRANTED ⚡${NC} Entity ${green}${USERNAME}${NC} breached ${yellow}${HOSTNAME}${NC} mainframe"
-echo -e "${cyan}║${NC} ${green}⧗ System Clock:${NC} ${DATE}"
+# Cyberpunk header z open-ended frame (bez ASCII banner)
+echo -e "${cyan}╔═══════════════════════════════════════════════════════════════════${NC}"
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}║${NC}  ${yellow}${AD_LINE}${NC}"
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}╠═══════════════════════════════════════════════════════════════════${NC}"
 HEADER
 chmod +x /etc/update-motd.d/00-header
 
@@ -536,23 +523,39 @@ cat > /etc/update-motd.d/10-sysinfo <<'SYSINFO'
 #!/bin/bash
 
 # Kolory
-cyan='\e[36m'
-green='\e[32m'
-yellow='\e[33m'
-NC='\e[0m'
+cyan='\033[0;36m'
+green='\033[0;32m'
+yellow='\033[1;33m'
+NC='\033[0m'
 
 # Pobierz informacje systemowe
-UPTIME_RAW=$(uptime -p | sed 's/up //')
-USERS=$(who | wc -l)
-LOAD=$(cat /proc/loadavg | awk '{print $1" "$2" "$3}')
+HOSTNAME=$(hostname -f)
+KERNEL=$(uname -r)
+UPTIME=$(uptime -p | sed 's/up //')
+LOAD=$(cat /proc/loadavg | awk '{print $1", "$2", "$3}')
+MEMORY=$(free -h | awk '/^Mem:/ {print $3"/"$2}')
+SWAP=$(free -h | awk '/^Swap:/ {print $3"/"$2}')
 
-# Format uptime na cyberpunk
-UPTIME_CYBER=$(echo "$UPTIME_RAW" | sed 's/hours\?/h/; s/minutes\?/m/; s/days\?/d/; s/,//g')
+# IPv4 i IPv6
+IPV4=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1' | head -1)
+IPV6=$(ip -6 addr show | grep -oP '(?<=inet6\s)[\da-f:]+' | grep -v '^::1' | grep -v '^fe80' | head -1)
 
-echo -e "${cyan}║${NC} ${green}∞ Core Runtime:${NC} ${UPTIME_CYBER} operational cycle"
-echo -e "${cyan}║${NC} ${green}⬢ Active Entities:${NC} ${USERS} nodes synchronized"
-echo -e "${cyan}║${NC} ${green}⚙ Processing Load:${NC} ${LOAD} nominal"
-echo -e "${cyan}║${NC} ${green}➜ Execute 'tahion' protocol for command matrix.${NC}"
+[ -z "$IPV4" ] && IPV4="N/A"
+[ -z "$IPV6" ] && IPV6="N/A"
+
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}║${NC}  ${yellow}⬢${NC} ${green}SYSTEM STATUS${NC}"
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}║${NC}    ${cyan}➜${NC} Hostname:      ${green}${HOSTNAME}${NC}"
+echo -e "${cyan}║${NC}    ${cyan}➜${NC} Kernel:        ${green}${KERNEL}${NC}"
+echo -e "${cyan}║${NC}    ${cyan}➜${NC} Uptime:        ${green}${UPTIME}${NC}"
+echo -e "${cyan}║${NC}    ${cyan}➜${NC} Load Average:  ${green}${LOAD}${NC}"
+echo -e "${cyan}║${NC}    ${cyan}➜${NC} Memory:        ${green}${MEMORY}${NC}"
+echo -e "${cyan}║${NC}    ${cyan}➜${NC} Swap:          ${green}${SWAP}${NC}"
+echo -e "${cyan}║${NC}    ${cyan}➜${NC} IPv4:          ${green}${IPV4}${NC}"
+echo -e "${cyan}║${NC}    ${cyan}➜${NC} IPv6:          ${green}${IPV6}${NC}"
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}╠═══════════════════════════════════════════════════════════════════${NC}"
 SYSINFO
 chmod +x /etc/update-motd.d/10-sysinfo
 
@@ -561,20 +564,20 @@ cat > /etc/update-motd.d/50-diskspace <<'DISK'
 #!/bin/bash
 
 # Kolory
-cyan='\e[36m'
-green='\e[32m'
-yellow='\e[33m'
-metalic_gray='\e[90m'
-NC='\e[0m'
+cyan='\033[0;36m'
+green='\033[0;32m'
+yellow='\033[1;33m'
+NC='\033[0m'
 
 echo -e "${cyan}║${NC}"
-echo -e "${cyan}║${NC} ${yellow}◆ Data Vault Allocation:${NC}"
-echo -e "${cyan}║${NC} ${green}Partition      Capacity  Allocated  Available  Usage  Mount Vector${NC}"
+echo -e "${cyan}║${NC}  ${yellow}⚙${NC} ${green}DISK USAGE${NC}"
+echo -e "${cyan}║${NC}"
 
-# Pokaż wykorzystanie dysków (bez tmpfs, devtmpfs)
-df -h | grep -vE '^(tmpfs|devtmpfs|udev)' | awk 'NR==1 {next} {printf "║ %-14s %-9s %-10s %-10s %-6s %s\n", $1, $2, $3, $4, $5, $6}'
+# Pokaż wykorzystanie dysków (bez tmpfs, devtmpfs) z kolorami
+df -h | grep -vE '^(tmpfs|devtmpfs|udev)' | awk -v cyan="${cyan}" -v green="${green}" -v nc="${NC}" 'NR==1 {next} {printf cyan"║"nc"    %-20s "green"%5s"nc" / "green"%-5s"nc" (%s)\n", $6, $3, $2, $5}'
 
-echo -e "${cyan}╚════════════════════════════[${metalic_gray}made with <3 by kofany & yooz${cyan}]${NC}"
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}╚═══════════════════════════════════════════════════════════════════${NC}"
 DISK
 chmod +x /etc/update-motd.d/50-diskspace
 
@@ -1105,37 +1108,10 @@ $TTL    60
 EOF
 }
 
-do_egg()
-{
-pushd /root/ >> /dev/null
-# Ustawienie adresu URL i nazwy pliku
-url="http://ftp.eggheads.org/pub/eggdrop/source/1.8/eggdrop-1.8.4.tar.gz"
-file_name="eggdrop-1.8.4.tar.gz"
-correct_sha256="79644eb27a5568934422fa194ce3ec21cfb9a71f02069d39813e85d99cdebf9e"
+# NOTE: do_egg, do_post, do_knb, do_update moved to install_bots.sh
+# This reduces main script size and allows bot installation without UI interference
 
-# Pobieranie pliku
-wget -q ${url} -O ${file_name} >/dev/null 2>&1
-
-# Sprawdzanie poprawności pobranego pliku
-downloaded_sha256=$(sha256sum ${file_name} | awk '{print $1}')
-
-if [ "${correct_sha256}" == "${downloaded_sha256}" ]; then
-    :  # SHA256 OK
-else
-    rm_file ${file_name} >/dev/null 2>&1
-    exit 1
-fi
-
-    pushd /root/ >/dev/null 2>&1
-    tar -zxf /root/eggdrop-1.8.4.tar.gz >/dev/null 2>&1
-    pushd /root/eggdrop-1.8.4 >/dev/null 2>&1
-    ./configure --enable-ipv6 >/dev/null 2>&1
-    make config >/dev/null 2>&1
-    make >/dev/null 2>&1
-    make install >/dev/null 2>&1
-    pushd /root/ >/dev/null 2>&1
-    rm -rf  /root/eggdrop/eggdrop.conf >/dev/null 2>&1
-cat <<'EOF' >> /root/eggdrop/eggdrop.conf
+do_admin()
 #! /bin/eggdrop
 # ^- This should contain a fully qualified path to your Eggdrop executable.
 
@@ -1335,7 +1311,7 @@ if [ -d "/root/knb" ]; then
             make dynamic
 
             # Szukaj pliku binarnego knb (nazwa może się różnić)
-            KNB_BINARY=$(find /root/knb -type f -name "knb-*-*" | head -1)
+            KNB_BINARY=$(find /root/knb -type f -name "knb*linux" -o -name "knb" | grep -v ".o$" | head -1)
 
             if [ -n "$KNB_BINARY" ] && [ -f "$KNB_BINARY" ]; then
                 cp "$KNB_BINARY" /bin/knb
@@ -1414,45 +1390,6 @@ fi
 
 popd >/dev/null 2>&1
 }
-
-####################################### System logowania
-
-LOG_FILE="/var/log/tahion.log"
-
-init_log() {
-    echo "=== tahioN Installation Log ===" > "$LOG_FILE"
-    echo "Started: $(date)" >> "$LOG_FILE"
-    echo "" >> "$LOG_FILE"
-}
-
-run_task_with_log() {
-    local task_idx=$1
-    local task_name=$2
-    shift 2
-
-    echo "[TASK $task_idx] Starting: $task_name" >> "$LOG_FILE"
-
-    # Start task w UI
-    start_task $task_idx
-
-    # Wykonaj funkcję i loguj output
-    "$@" >> "$LOG_FILE" 2>&1
-    local exit_code=$?
-
-    # Complete task w UI
-    complete_task $task_idx
-
-    if [ $exit_code -eq 0 ]; then
-        echo "[TASK $task_idx] ✓ SUCCESS: $task_name" >> "$LOG_FILE"
-    else
-        echo "[TASK $task_idx] ✗ FAILED: $task_name (exit code: $exit_code)" >> "$LOG_FILE"
-    fi
-    echo "" >> "$LOG_FILE"
-
-    return $exit_code
-}
-
-####################################### Admin account creation
 
 do_admin()
 {
@@ -1588,9 +1525,6 @@ sleep 1.5
 
 banner
 
-# Inicjalizacja systemu logowania
-init_log
-
 # Inicjalizacja systemu progress bar
 init_tasks
 
@@ -1598,51 +1532,34 @@ init_tasks
 clear
 
 # Task 0: IPv6 network detection & GitHub proxy setup
-run_task_with_log 0 "IPv6 setup" do_ipv6_setup
+run_task_simple 0 do_ipv6_setup
 
 # Task 1: APT repository synchronization & package matrix
-run_task_with_log 1 "APT packages" do_apt
+run_task_simple 1 do_apt
 
 # Task 2: Zsh + modern CLI tools deployment
-run_task_with_log 2 "Zsh configuration" do_zsh_setup
+run_task_simple 2 do_zsh_setup
 
 # Task 3: SSH hardening & Fail2Ban protection matrix
-run_task_with_log 3 "SSH & Fail2Ban" do_sshd_f2b
+run_task_simple 3 do_sshd_f2b
 
 # Task 4: MOTD cyberpunk matrix deployment
-run_task_with_log 4 "MOTD setup" do_motd_cyberpunk
+run_task_simple 4 do_motd_cyberpunk
 
 # Task 5: BIND9 DNS server configuration
-run_task_with_log 5 "BIND9 DNS" do_bind
+run_task_simple 5 do_bind
 
-# Task 6: Eggdrop bot assembly v1.8.4
-run_task_with_log 6 "Eggdrop bot" do_egg
+# Tasks 6-9: IRC bots installation (STANDALONE SCRIPT - NO UI)
+echo -e "\n${cyan}╔═══════════════════════════════════════════════════════════════════${NC}"
+echo -e "${cyan}║${NC}  ${yellow}Starting bot installation (no progress bar)${NC}"
+echo -e "${cyan}╚═══════════════════════════════════════════════════════════════════${NC}\n"
 
-# Task 7: Psotnic bot deployment sequence
-run_task_with_log 7 "Psotnic bot" do_post
-
-# Task 8: KNB bot initialization protocol
-run_task_with_log 8 "KNB bot" do_knb
-
-# Task 9: Binary update & system finalization
-run_task_with_log 9 "Binary updates" do_update
+bash $(dirname "$0")/install_bots.sh
 
 # Finalne wyświetlenie progress bara (100%)
 sleep 1
 tput cnorm
 clear
-
-# Wyświetl log instalacji
-echo -e "${cyan}╔═══════════════════════════════════════════════════════════════════${NC}"
-echo -e "${cyan}║${NC}  ${yellow}INSTALLATION LOG${NC}"
-echo -e "${cyan}╚═══════════════════════════════════════════════════════════════════${NC}\n"
-
-cat "$LOG_FILE"
-
-echo ""
-echo -e "${cyan}╔═══════════════════════════════════════════════════════════════════${NC}"
-echo -e "${cyan}║${NC}  ${green}Full log saved to: ${LOG_FILE}${NC}"
-echo -e "${cyan}╚═══════════════════════════════════════════════════════════════════${NC}\n"
 
 # Interaktywne tworzenie kont administratorów (po zakończeniu instalacji)
 do_admin
