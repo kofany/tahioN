@@ -480,10 +480,233 @@ export PATH="$HOME/.cargo/bin:$PATH"
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.dotnet:$PATH"
+
+# Starship prompt with catppuccin-powerline preset
+eval "$(starship init zsh)"
+export STARSHIP_CONFIG=~/.config/starship.toml
 ZSHRC
 
 # Upewnij się że /etc/skel/.zshrc ma odpowiednie uprawnienia
 chmod 644 /etc/skel/.zshrc
+
+# Create starship config with catppuccin-powerline preset
+mkdir -p /etc/skel/.config
+cat <<'STARSHIP' > /etc/skel/.config/starship.toml
+# Get editor completions based on the config schema
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Use catppuccin-powerline preset
+format = """
+[](color_orange)\
+$os\
+$username\
+[](bg:color_yellow fg:color_orange)\
+$directory\
+[](fg:color_yellow bg:color_aqua)\
+$git_branch\
+$git_status\
+[](fg:color_aqua bg:color_blue)\
+$c\
+$rust\
+$golang\
+$nodejs\
+$php\
+$java\
+$kotlin\
+$haskell\
+$python\
+[](fg:color_blue bg:color_bg3)\
+$docker_context\
+$conda\
+[](fg:color_bg3 bg:color_bg1)\
+$time\
+[ ](fg:color_bg1)\
+$line_break$character"""
+
+palette = 'catppuccin_mocha'
+
+[palettes.catppuccin_mocha]
+color_fg0 = '#cdd6f4'
+color_bg1 = '#45475a'
+color_bg3 = '#585b70'
+color_blue = '#89b4fa'
+color_aqua = '#89dceb'
+color_green = '#a6e3a1'
+color_orange = '#fab387'
+color_purple = '#cba6f7'
+color_red = '#f38ba8'
+color_yellow = '#f9e2af'
+
+[os]
+disabled = false
+style = "bg:color_orange fg:#1e1e2e"
+
+[os.symbols]
+Windows = "󰍲"
+Ubuntu = "󰕈"
+SUSE = ""
+Raspbian = "󰐿"
+Mint = "󰣭"
+Macos = "󰀵"
+Manjaro = ""
+Linux = "󰌽"
+Gentoo = "󰣨"
+Fedora = "󰣛"
+Alpine = ""
+Amazon = ""
+Android = ""
+Arch = "󰣇"
+Artix = "󰣇"
+CentOS = ""
+Debian = "󰣚"
+Redhat = "󱄛"
+RedHatEnterprise = "󱄛"
+
+[username]
+show_always = true
+style_user = "bg:color_orange fg:#1e1e2e"
+style_root = "bg:color_orange fg:#1e1e2e"
+format = '[ $user ]($style)'
+
+[directory]
+style = "fg:#1e1e2e bg:color_yellow"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[directory.substitutions]
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music" = "󰝚 "
+"Pictures" = " "
+"Developer" = "󰲋 "
+
+[git_branch]
+symbol = ""
+style = "bg:color_aqua"
+format = '[[ $symbol $branch ](fg:#1e1e2e bg:color_aqua)]($style)'
+
+[git_status]
+style = "bg:color_aqua"
+format = '[[($all_status$ahead_behind )](fg:#1e1e2e bg:color_aqua)]($style)'
+
+[nodejs]
+symbol = ""
+style = "bg:color_blue"
+format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
+
+[c]
+symbol = " "
+style = "bg:color_blue"
+format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
+
+[rust]
+symbol = ""
+style = "bg:color_blue"
+format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
+
+[golang]
+symbol = ""
+style = "bg:color_blue"
+format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
+
+[php]
+symbol = ""
+style = "bg:color_blue"
+format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
+
+[java]
+symbol = " "
+style = "bg:color_blue"
+format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
+
+[kotlin]
+symbol = ""
+style = "bg:color_blue"
+format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
+
+[haskell]
+symbol = ""
+style = "bg:color_blue"
+format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
+
+[python]
+symbol = ""
+style = "bg:color_blue"
+format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
+
+[docker_context]
+symbol = ""
+style = "bg:color_bg3"
+format = '[[ $symbol( $context) ](fg:#83a598 bg:color_bg3)]($style)'
+
+[conda]
+style = "bg:color_bg3"
+format = '[[ $symbol( $environment) ](fg:#83a598 bg:color_bg3)]($style)'
+
+[time]
+disabled = false
+time_format = "%R"
+style = "bg:color_bg1"
+format = '[[  $time ](fg:color_fg0 bg:color_bg1)]($style)'
+
+[line_break]
+disabled = false
+
+[character]
+disabled = false
+success_symbol = '[](bold fg:color_green)'
+error_symbol = '[](bold fg:color_red)'
+vimcmd_symbol = '[](bold fg:color_green)'
+vimcmd_replace_one_symbol = '[](bold fg:color_purple)'
+vimcmd_replace_symbol = '[](bold fg:color_purple)'
+vimcmd_visual_symbol = '[](bold fg:color_yellow)'
+STARSHIP
+
+chmod 644 /etc/skel/.config/starship.toml
+
+# Copy to root home directory
+cp /etc/skel/.zshrc /root/.zshrc
+mkdir -p /root/.config
+cp /etc/skel/.config/starship.toml /root/.config/starship.toml
+}
+
+####################################### Aktualizacja .zshrc dla istniejących użytkowników
+
+do_update_existing_users()
+{
+# Update .zshrc and starship.toml for all existing users in /home/
+for user_home in /home/*; do
+    if [ -d "${user_home}" ]; then
+        username=$(basename "${user_home}")
+
+        # Skip if user doesn't exist in system
+        if ! id "${username}" &>/dev/null; then
+            continue
+        fi
+
+        # Backup old .zshrc if exists
+        if [ -f "${user_home}/.zshrc" ]; then
+            cp "${user_home}/.zshrc" "${user_home}/.zshrc.backup-$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
+        fi
+
+        # Remove old p10k config if exists
+        rm -f "${user_home}/.p10k.zsh" 2>/dev/null || true
+        rm -rf "${user_home}/.cache/p10k-instant-prompt-${username}.zsh" 2>/dev/null || true
+
+        # Copy new .zshrc
+        cp /etc/skel/.zshrc "${user_home}/.zshrc"
+        chown "${username}:${username}" "${user_home}/.zshrc" 2>/dev/null || true
+
+        # Create .config directory if doesn't exist
+        mkdir -p "${user_home}/.config"
+        chown "${username}:${username}" "${user_home}/.config" 2>/dev/null || true
+
+        # Copy starship config
+        cp /etc/skel/.config/starship.toml "${user_home}/.config/starship.toml"
+        chown "${username}:${username}" "${user_home}/.config/starship.toml" 2>/dev/null || true
+    fi
+done
 }
 
 ####################################### MOTD Cyberpunk - modułowy system /etc/update-motd.d/
@@ -566,7 +789,15 @@ UPTIME_CYBER=$(echo "$UPTIME_RAW" | sed 's/hours\?/h/; s/minutes\?/m/; s/days\?/
 echo -e "${cyan}║${NC} ${yellow}∞${NC} Core Runtime: ${UPTIME_CYBER} operational cycle"
 echo -e "${cyan}║${NC} ${light_grey}⬢${NC} Active Entities: ${USERS} nodes synchronized"
 echo -e "${cyan}║${NC} ${light_green}⚙${NC} Processing Load: ${LOAD} nominal"
+echo -e "${cyan}║${NC}"
 echo -e "${cyan}║${NC} ${magenta}➜${NC} Execute '${magenta}tahion${NC}' protocol for command matrix."
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}║${NC} ${light_green}⚡${NC} Starship Theme: Change with ${yellow}starship preset apply <theme>${NC}"
+echo -e "${cyan}║${NC}   ${light_grey}Available presets:${NC}"
+echo -e "${cyan}║${NC}   ${cyan}bracketed-segments${NC}, ${magenta}catppuccin-powerline${NC}, ${yellow}gruvbox-rainbow${NC},"
+echo -e "${cyan}║${NC}   ${light_green}jetpack${NC}, ${light_grey}nerd-font-symbols${NC}, ${cyan}no-empty-icons${NC},"
+echo -e "${cyan}║${NC}   ${yellow}no-nerd-font${NC}, ${magenta}no-runtime-versions${NC}, ${light_green}pastel-powerline${NC},"
+echo -e "${cyan}║${NC}   ${cyan}plain-text-symbols${NC}, ${yellow}pure-preset${NC}, ${magenta}tokyo-night${NC}"
 SYSINFO
 chmod +x /etc/update-motd.d/10-sysinfo
 
@@ -641,6 +872,9 @@ do_apt()
 
     # Zsh and modern CLI tools
     DEBIAN_FRONTEND=noninteractive apt-get -y install zsh fzf eza zoxide >/dev/null 2>&1
+
+    # Install starship from official installer
+    curl -sS https://starship.rs/install.sh | sh -s -- -y >/dev/null 2>&1
 
     # Perl modules for IRC bots
     DEBIAN_FRONTEND=noninteractive apt-get -y install libdbi-perl libwww-perl liburi-escape-xs-perl >/dev/null 2>&1
@@ -759,263 +993,12 @@ echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
 #dyski
 
 EOF
-cat <<'EOF' >> /bin/v6it
-#!/bin/bash
-###############################################
-##  Tahio Syndykat Server Scripts            ##
-##  (c) Kofany - Made with ❤ using ChatGPT   ##
-###############################################
-
-# Kolory i dekoracje
-FAT_GREEN='\033[1;32m'
-IM_YELLOW='\033[1;33m'
-NC='\033[0m' # Brak koloru
-UPPER_BORDER="╔═════════════════════════════════[tahio team@IRCnet /join #pato]"
-LOWER_BORDER="╚═════════════════════════════════[made with <3 by kofany & yooz]"
-SIDE_BORDER="║"
-
-
-# Polecenie do wydobycia adresów IPv6
-cmd_output=$(ip -6 addr show | grep 'inet6 ' | awk '{print $2}' | cut -d/ -f1 | grep -vE '^::1|^fe80.*|^fd.*|^fc.*')
-
-# Wydobycie dwóch pierwszych adresów z każdej klasy /48
-echo -e "${IM_YELLOW}${UPPER_BORDER}${NC}"
-echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Adresy do użycia z irc6.tophost.it:${NC}"
-echo -e "${IM_YELLOW}${SIDE_BORDER}${NC}"
-echo "$cmd_output" | awk -F ':' '{print $1":"$2":"$3}' | sort | uniq -c | \
-while read count prefix; do
-    if [[ $count -ge 2 ]]; then
-        echo "$cmd_output" | grep "^$prefix" | head -n 2 | awk -v prefix="$prefix" -v border="${IM_YELLOW}${SIDE_BORDER}${NC} " -v color="${FAT_GREEN}" '{print border " " color $0 " " }'
-    fi
-done
-echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
-EOF
-chmod +x /bin/v6it
-cat <<'EOF' >> /bin/pomoc
-#!/bin/bash
-###############################################
-##  Tahio.syndykat User Management Script    ##
-##  (c) kofany - enhanced with ChatGPT       ##
-###############################################
-
-# Kolory i dekoracje
-FAT_GREEN='\033[1;32m'
-IM_YELLOW='\033[1;33m'
-NC='\033[0m' # Brak koloru
-UPPER_BORDER="╔═════════════════════════════════[tahio team@IRcnet /join #pato]"
-LOWER_BORDER="╚═════════════════════════════════[made with <3 by kofany & yooz]"
-SIDE_BORDER="║"
-
-PRM="${IM_YELLOW}➜${NC} "
-
-# Funkcja wyświetlająca komendy dla roota
-display_root_commands() {
-    echo -e "${IM_YELLOW}${UPPER_BORDER}${NC}"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Lista dostępnych komend dla administratora:${NC}"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}add${NC} - Dodaje użytkownika (zamiast adduser)"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}addconn${NC} - Zmienia limit połączeń do IRC dla użytkownika"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}addlimit${NC} - Zmienia limit połączeń do IRC dla użytkownika"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}block${NC} - Blokuje konto użytkownika"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}blocked${NC} - Wyświetla zablokowanych użytkowników"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}blocklist${NC} - Wyświetla zablokowanych użytkowników"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}ddos${NC} - Wyświetla, czy aktualnie ktoś atakuje serwer"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}del${NC} - Usuwa konto użytkownika"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}fw${NC} - Otwiera plik firewall (nie ruszać lepiej)"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}fwfree${NC} - Usuwa firewall (nie ruszać lepiej)"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-egg${NC} - Eggdrop"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-psotnic${NC} - Psotnic"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-znc${NC} - ZNC"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}ile${NC} - Wyświetla wszystkie aktywne połączenia do IRC na serwerze"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}rebind${NC} - Restartuje BIND (dla was nie ważne)"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}udel${NC} - To samo co 'del'"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}unban${NC} - Odbanowuje użytkownika zbanowanego przez Fail2Ban"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}unblock${NC} - Zdejmuje blokadę konta użytkownika"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}vhosts${NC} - Pokazuje VHosty"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}knb${NC} - KNB"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}v6it${NC} - Wyświetla po 2 IP z każdej klasy /48 (dla irc6.tophost.it)"
-    echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
-}
-
-# Funkcja wyświetlająca komendy dla zwykłego użytkownika
-display_commands() {
-    echo -e "${IM_YELLOW}${UPPER_BORDER}${NC}"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Lista dostępnych komend dla użytkownika:${NC}"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-egg${NC} - Eggdrop"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-psotnic${NC} - Psotnic"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}get-znc${NC} - ZNC"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}vhosts${NC} - Pokazuje VHosty"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}knb${NC} - KNB"
-    echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}v6it${NC} - Wyświetla po 2 IP z każdej klasy /48 (dla irc6.tophost.it)"
-    echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
-}
-
-# Wywołanie funkcji w zależności od uprawnień użytkownika
-if [ "$(id -u)" -ne 0 ]; then
-  display_commands
-else
-  display_root_commands
-fi
-EOF
-chmod +x /bin/pomoc
 
     rm_file "/etc/hostname"
     echo -e "LC_TIME=\"C\"" >> /etc/default/locale
     echo -e "${SERVER_NAME}" >> /etc/hostname
     hostname ${SERVER_NAME} < /dev/null > /dev/null
-    rm_file "/etc/profile"
-    rm_file "/etc/bash.bashrc"
-
-cat <<'EOF' >> /etc/profile
-#/etc/profile: system-wide .profile file for the Bourne shell (sh(1))
-# and Bourne compatible shells (bash(1), ksh(1), ash(1), ...).
-
-if [ "`id -u`" -eq 0 ]; then
-  PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-else
-  PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"
-fi
-export PATH
-
-
-if [ -d /etc/profile.d ]; then
-  for i in /etc/profile.d/motd.sh; do
-    if [ -r $i ]; then
-      . $i
-    fi
-  done
-  unset i
-fi
-
-if [ "${PS1-}" ]; then
-  if [ "${BASH-}" ] && [ "$BASH" != "/bin/sh" ]; then
-    # The file bash.bashrc already sets the default PS1.
-    # PS1='\h:\w\$ '
-    if [ -f /etc/bash.bashrc ]; then
-      . /etc/bash.bashrc
-    fi
-    # Dodajemy nowoczesny i kolorystyczny prompt dla systemu Debian
-
-    RESET="\[\033[0m\]"
-    RED="\[\033[0;31m\]"
-    GREEN="\[\033[0;32m\]"
-    YELLOW="\[\033[0;33m\]"
-    BLUE="\[\033[0;34m\]"
-    MAGENTA="\[\033[0;35m\]"
-    CYAN="\[\033[0;36m\]"
-    DARK_GRAY="\[\033[0;37m\]"
-    LIGHT_BLUE="\[\033[1;34m\]"
-    LIGHT_GREEN="\[\033[1;32m\]"
-    LIGHT_CYAN="\[\033[1;36m\]"
-    LIGHT_RED="\[\033[1;31m\]"
-    WHITE="\[\033[0;37m\]"
-
-    # Informacje o systemie
-    debian_chroot() {
-      if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
-        debian_chroot=$(cat /etc/debian_chroot)
-      fi
-      if [ -n "$debian_chroot" ]; then
-        printf "(%s)" "$debian_chroot"
-      fi
-    }
-
-    # Prompt
-PS1="${DARK_GRAY}\t ${LIGHT_CYAN}➜ ${RED}\u${WHITE}@${YELLOW}\h${RESET}${LIGHT_CYAN} ➜ ${LIGHT_BLUE}Ścieżka: ${MAGENTA}\w\$(debian_chroot)${RESET}\n${LIGHT_CYAN}➜${WHITE} "
-  else
-    if [ "`id -u`" -eq 0 ]; then
-      PS1='# '
-    else
-      PS1='$ '
-    fi
-  fi
-fi
-EOF
-cat <<'EOF' >> /etc/bash.bashrc
-# /etc/bash.bashrc: system-wide .bashrc file for interactive bash(1) shells.
-[ -z "$PS1" ] && return
-shopt -s checkwinsize
-if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-    debian_chroot=$(cat /etc/debian_chroot)
-fi
-case "$TERM" in
-    xterm-color|*-256color) color_prompt=yes;;
-esac
-force_color_prompt=yes
-
-if [ -n "$force_color_prompt" ]; then
-    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-
-    RESET="\[\033[0m\]"
-    RED="\[\033[0;31m\]"
-    GREEN="\[\033[0;32m\]"
-    YELLOW="\[\033[0;33m\]"
-    BLUE="\[\033[0;34m\]"
-    MAGENTA="\[\033[0;35m\]"
-    CYAN="\[\033[0;36m\]"
-    DARK_GRAY="\[\033[0;37m\]"
-    LIGHT_BLUE="\[\033[1;34m\]"
-    LIGHT_GREEN="\[\033[1;32m\]"
-    LIGHT_CYAN="\[\033[1;36m\]"
-    LIGHT_RED="\[\033[1;31m\]"
-    WHITE="\[\033[0;37m\]"
-
-        debian_chroot() {
-            if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
-                debian_chroot=$(cat /etc/debian_chroot)
-            fi
-            if [ -n "$debian_chroot" ]; then
-                printf "(%s)" "$debian_chroot"
-            fi
-        }
-
-PS1="${DARK_GRAY}\t ${LIGHT_CYAN}➜ ${RED}\u${WHITE}@${YELLOW}\h${RESET}${LIGHT_CYAN} ➜ ${LIGHT_BLUE}Ścieżka: ${MAGENTA}\w\$(debian_chroot)${RESET}\n${LIGHT_CYAN}➜${WHITE} "
-
-    else
-        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
-    fi
-fi
-unset color_prompt force_color_prompt
-
-case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-    ;;
-*)
-    ;;
-esac
-
-if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=auto'
-    #alias dir='dir --color=auto'
-    #alias vdir='vdir --color=auto'
-
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
-fi
-
-alias ll='ls -l'
-alias la='ls -A'
-alias l='ls -CF'
-
-
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
-
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
-fi
-export LC_ALL=
-export LC_TIME=C
-EOF
-cp /etc/bash.bashrc /etc/skel/.bashrc
-touch /etc/skel/.hushlogin
+    touch /etc/skel/.hushlogin
 }
 
 do_sshd_f2b()
@@ -1564,38 +1547,7 @@ for user in "${users[@]}"; do
         echo "${user}:${password}" | chpasswd
         user_passwords["${user}"]=${password}
 
-        # Power user setup - Powerlevel10k dla sudo users
-        if [ -f /home/${user}/.zshrc ]; then
-            # Backup original
-            cp /home/${user}/.zshrc /home/${user}/.zshrc.backup
-
-            # Create new .zshrc with p10k instant prompt at the top
-            {
-                echo '# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.'
-                echo 'if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then'
-                echo '  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"'
-                echo 'fi'
-                echo ''
-                cat /home/${user}/.zshrc.backup
-            } > /home/${user}/.zshrc
-
-            # Add p10k to zinit (after zinit source line)
-            sed -i '/source.*zinit.zsh/a \\n# Add in Powerlevel10k\nzinit ice depth=1; zinit light romkatv\/powerlevel10k' /home/${user}/.zshrc
-
-            # Add p10k config source at the end
-            echo -e "\n# To customize prompt, run \`p10k configure\` or edit ~/.p10k.zsh.\n[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh" >> /home/${user}/.zshrc
-
-            chown ${user}:${user} /home/${user}/.zshrc
-            rm /home/${user}/.zshrc.backup
-        fi
-
-        # Copy p10k config
-        if [ -f /root/.p10k.zsh ]; then
-            cp /root/.p10k.zsh /home/${user}/.p10k.zsh
-            chown ${user}:${user} /home/${user}/.p10k.zsh
-        fi
-
-        tt "${green}Użytkownik ${user} został utworzony z zsh + Powerlevel10k."
+        tt "${green}Użytkownik ${user} został utworzony z zsh + starship."
     fi
 done
 
@@ -1665,6 +1617,9 @@ run_task_with_log 1 "APT packages" do_apt
 
 # Task 2: Zsh + modern CLI tools deployment
 run_task_with_log 2 "Zsh configuration" do_zsh_setup
+
+# Update existing users with new .zshrc and starship config
+do_update_existing_users >/dev/null 2>&1
 
 # Task 3: SSH hardening & Fail2Ban protection matrix
 run_task_with_log 3 "SSH & Fail2Ban" do_sshd_f2b
