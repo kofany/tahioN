@@ -1299,62 +1299,62 @@ fi
 do_update()
 {
 pushd /root/ >> /dev/null
+
 # Stałe
-URL="${GITHUB_URL}/kofany/tahioN/raw/main/update.tar.gz"
-DOWNLOAD_FILE="update.tar.gz"
-UPDATE_DIR="update"
+REPO_URL="${GITHUB_URL}/kofany/tahioN.git"
+CLONE_DIR="tahioN"
+UPDATE_DIR="${CLONE_DIR}/update"
 
-# Pobierz plik
-wget -q "${URL}" -O "${DOWNLOAD_FILE}"
+# Usuń stary folder jeśli istnieje
+rm -rf "/root/${CLONE_DIR}"
 
-# Sprawdź czy plik został pobrany i ma rozmiar > 0
-if [ -f "${DOWNLOAD_FILE}" ] && [ -s "${DOWNLOAD_FILE}" ]; then
-    # Sprawdź czy to poprawny plik tar.gz
-    if file "${DOWNLOAD_FILE}" | grep -q "gzip compressed"; then
-        tar -xzf "${DOWNLOAD_FILE}"
+# Sklonuj repo (używa GITHUB_URL która jest IPv6-aware)
+if git clone --depth 1 "${REPO_URL}" "${CLONE_DIR}" >/dev/null 2>&1; then
 
-        if [ $? -eq 0 ] && [ -d "/root/${UPDATE_DIR}" ]; then
-            # Wejście do folderu update
-            pushd /root/${UPDATE_DIR} >/dev/null 2>&1
-            # Pobranie listy plików
-            FILES_LIST=$(ls)
+    # Sprawdź czy folder update istnieje
+    if [ -d "/root/${UPDATE_DIR}" ]; then
+        # Wejście do folderu update
+        pushd /root/${UPDATE_DIR} >/dev/null 2>&1
 
-            # Przenoszenie plików
-            for FILE in ${FILES_LIST}; do
-                if [ -f "/bin/${FILE}" ]; then
-                    rm -rf "/bin/${FILE}"
-                fi
+        # Pobranie listy plików
+        FILES_LIST=$(ls)
+
+        # Przenoszenie plików do /bin/
+        for FILE in ${FILES_LIST}; do
+            if [ -f "${FILE}" ]; then
+                # Usuń stary plik jeśli istnieje
+                [ -f "/bin/${FILE}" ] && rm -f "/bin/${FILE}"
+
+                # Kopiuj nowy plik
                 cp "${FILE}" "/bin/${FILE}"
                 chmod +x "/bin/${FILE}"
-            done
-
-            popd >/dev/null 2>&1
-            rm -rf /root/upda*
-
-            # Weryfikacja że kluczowe binaria zostały zainstalowane
-            if [ ! -f "/bin/tahion" ]; then
-                echo "ERROR: tahion binary not installed to /bin/" >&2
-                popd >/dev/null 2>&1
-                return 1
             fi
+        done
 
-            popd >/dev/null 2>&1
-            return 0
-        else
-            echo "ERROR: Failed to extract update.tar.gz or update directory not found" >&2
-            rm -f "${DOWNLOAD_FILE}"
+        popd >/dev/null 2>&1
+
+        # Weryfikacja że kluczowe binaria zostały zainstalowane
+        if [ ! -f "/bin/tahion" ]; then
+            echo "ERROR: tahion binary not installed to /bin/" >&2
+            rm -rf /root/${CLONE_DIR}
             popd >/dev/null 2>&1
             return 1
         fi
+
+        # Cleanup - usuń sklonowane repo
+        rm -rf /root/${CLONE_DIR}
+
+        popd >/dev/null 2>&1
+        return 0
     else
-        echo "ERROR: Downloaded file is not a valid gzip archive (size: $(stat -f%z "${DOWNLOAD_FILE}" 2>/dev/null || stat -c%s "${DOWNLOAD_FILE}") bytes)" >&2
-        rm -f "${DOWNLOAD_FILE}"
+        echo "ERROR: update directory not found in cloned repo" >&2
+        rm -rf /root/${CLONE_DIR}
         popd >/dev/null 2>&1
         return 1
     fi
 else
-    echo "ERROR: Failed to download update.tar.gz from ${URL} or file is empty" >&2
-    rm -f "${DOWNLOAD_FILE}"
+    echo "ERROR: Failed to clone repository from ${REPO_URL}" >&2
+    rm -rf /root/${CLONE_DIR}
     popd >/dev/null 2>&1
     return 1
 fi
