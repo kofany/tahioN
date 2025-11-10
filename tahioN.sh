@@ -489,186 +489,14 @@ ZSHRC
 # Upewnij się że /etc/skel/.zshrc ma odpowiednie uprawnienia
 chmod 644 /etc/skel/.zshrc
 
-# Create starship config with catppuccin-powerline preset
+# Apply catppuccin-powerline preset for /etc/skel/
 mkdir -p /etc/skel/.config
-cat <<'STARSHIP' > /etc/skel/.config/starship.toml
-# Get editor completions based on the config schema
-"$schema" = 'https://starship.rs/config-schema.json'
-
-# Use catppuccin-powerline preset
-format = """
-[](color_orange)\
-$os\
-$username\
-[](bg:color_yellow fg:color_orange)\
-$directory\
-[](fg:color_yellow bg:color_aqua)\
-$git_branch\
-$git_status\
-[](fg:color_aqua bg:color_blue)\
-$c\
-$rust\
-$golang\
-$nodejs\
-$php\
-$java\
-$kotlin\
-$haskell\
-$python\
-[](fg:color_blue bg:color_bg3)\
-$docker_context\
-$conda\
-[](fg:color_bg3 bg:color_bg1)\
-$time\
-[ ](fg:color_bg1)\
-$line_break$character"""
-
-palette = 'catppuccin_mocha'
-
-[palettes.catppuccin_mocha]
-color_fg0 = '#cdd6f4'
-color_bg1 = '#45475a'
-color_bg3 = '#585b70'
-color_blue = '#89b4fa'
-color_aqua = '#89dceb'
-color_green = '#a6e3a1'
-color_orange = '#fab387'
-color_purple = '#cba6f7'
-color_red = '#f38ba8'
-color_yellow = '#f9e2af'
-
-[os]
-disabled = false
-style = "bg:color_orange fg:#1e1e2e"
-
-[os.symbols]
-Windows = "󰍲"
-Ubuntu = "󰕈"
-SUSE = ""
-Raspbian = "󰐿"
-Mint = "󰣭"
-Macos = "󰀵"
-Manjaro = ""
-Linux = "󰌽"
-Gentoo = "󰣨"
-Fedora = "󰣛"
-Alpine = ""
-Amazon = ""
-Android = ""
-Arch = "󰣇"
-Artix = "󰣇"
-CentOS = ""
-Debian = "󰣚"
-Redhat = "󱄛"
-RedHatEnterprise = "󱄛"
-
-[username]
-show_always = true
-style_user = "bg:color_orange fg:#1e1e2e"
-style_root = "bg:color_orange fg:#1e1e2e"
-format = '[ $user ]($style)'
-
-[directory]
-style = "fg:#1e1e2e bg:color_yellow"
-format = "[ $path ]($style)"
-truncation_length = 3
-truncation_symbol = "…/"
-
-[directory.substitutions]
-"Documents" = "󰈙 "
-"Downloads" = " "
-"Music" = "󰝚 "
-"Pictures" = " "
-"Developer" = "󰲋 "
-
-[git_branch]
-symbol = ""
-style = "bg:color_aqua"
-format = '[[ $symbol $branch ](fg:#1e1e2e bg:color_aqua)]($style)'
-
-[git_status]
-style = "bg:color_aqua"
-format = '[[($all_status$ahead_behind )](fg:#1e1e2e bg:color_aqua)]($style)'
-
-[nodejs]
-symbol = ""
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
-
-[c]
-symbol = " "
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
-
-[rust]
-symbol = ""
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
-
-[golang]
-symbol = ""
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
-
-[php]
-symbol = ""
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
-
-[java]
-symbol = " "
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
-
-[kotlin]
-symbol = ""
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
-
-[haskell]
-symbol = ""
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
-
-[python]
-symbol = ""
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:#1e1e2e bg:color_blue)]($style)'
-
-[docker_context]
-symbol = ""
-style = "bg:color_bg3"
-format = '[[ $symbol( $context) ](fg:#83a598 bg:color_bg3)]($style)'
-
-[conda]
-style = "bg:color_bg3"
-format = '[[ $symbol( $environment) ](fg:#83a598 bg:color_bg3)]($style)'
-
-[time]
-disabled = false
-time_format = "%R"
-style = "bg:color_bg1"
-format = '[[  $time ](fg:color_fg0 bg:color_bg1)]($style)'
-
-[line_break]
-disabled = false
-
-[character]
-disabled = false
-success_symbol = '[](bold fg:color_green)'
-error_symbol = '[](bold fg:color_red)'
-vimcmd_symbol = '[](bold fg:color_green)'
-vimcmd_replace_one_symbol = '[](bold fg:color_purple)'
-vimcmd_replace_symbol = '[](bold fg:color_purple)'
-vimcmd_visual_symbol = '[](bold fg:color_yellow)'
-STARSHIP
-
-chmod 644 /etc/skel/.config/starship.toml
+starship preset catppuccin-powerline -o /etc/skel/.config/starship.toml >/dev/null 2>&1
 
 # Copy to root home directory
 cp /etc/skel/.zshrc /root/.zshrc
 mkdir -p /root/.config
-cp /etc/skel/.config/starship.toml /root/.config/starship.toml
+starship preset catppuccin-powerline -o /root/.config/starship.toml >/dev/null 2>&1
 }
 
 ####################################### Aktualizacja .zshrc dla istniejących użytkowników
@@ -702,8 +530,8 @@ for user_home in /home/*; do
         mkdir -p "${user_home}/.config"
         chown "${username}:${username}" "${user_home}/.config" 2>/dev/null || true
 
-        # Copy starship config
-        cp /etc/skel/.config/starship.toml "${user_home}/.config/starship.toml"
+        # Apply starship preset
+        starship preset catppuccin-powerline -o "${user_home}/.config/starship.toml" >/dev/null 2>&1
         chown "${username}:${username}" "${user_home}/.config/starship.toml" 2>/dev/null || true
     fi
 done
@@ -789,15 +617,7 @@ UPTIME_CYBER=$(echo "$UPTIME_RAW" | sed 's/hours\?/h/; s/minutes\?/m/; s/days\?/
 echo -e "${cyan}║${NC} ${yellow}∞${NC} Core Runtime: ${UPTIME_CYBER} operational cycle"
 echo -e "${cyan}║${NC} ${light_grey}⬢${NC} Active Entities: ${USERS} nodes synchronized"
 echo -e "${cyan}║${NC} ${light_green}⚙${NC} Processing Load: ${LOAD} nominal"
-echo -e "${cyan}║${NC}"
 echo -e "${cyan}║${NC} ${magenta}➜${NC} Execute '${magenta}tahion${NC}' protocol for command matrix."
-echo -e "${cyan}║${NC}"
-echo -e "${cyan}║${NC} ${light_green}⚡${NC} Starship Theme: Change with ${yellow}starship preset apply <theme>${NC}"
-echo -e "${cyan}║${NC}   ${light_grey}Available presets:${NC}"
-echo -e "${cyan}║${NC}   ${cyan}bracketed-segments${NC}, ${magenta}catppuccin-powerline${NC}, ${yellow}gruvbox-rainbow${NC},"
-echo -e "${cyan}║${NC}   ${light_green}jetpack${NC}, ${light_grey}nerd-font-symbols${NC}, ${cyan}no-empty-icons${NC},"
-echo -e "${cyan}║${NC}   ${yellow}no-nerd-font${NC}, ${magenta}no-runtime-versions${NC}, ${light_green}pastel-powerline${NC},"
-echo -e "${cyan}║${NC}   ${cyan}plain-text-symbols${NC}, ${yellow}pure-preset${NC}, ${magenta}tokyo-night${NC}"
 SYSINFO
 chmod +x /etc/update-motd.d/10-sysinfo
 
@@ -819,6 +639,14 @@ echo -e "${cyan}║${NC} ${green}Partition      Capacity  Allocated  Available  
 # Pokaż wykorzystanie dysków (bez tmpfs, devtmpfs)
 df -h | grep -vE '^(tmpfs|devtmpfs|udev)' | awk 'NR==1 {next} {printf "║ %-14s %-9s %-10s %-10s %-6s %s\n", $1, $2, $3, $4, $5, $6}'
 
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}║${NC} ${green}⚡${NC} Starship Theme: Change with ${neon_blue}starship preset apply <theme>${NC}"
+echo -e "${cyan}║${NC}   ${metalic_gray}Available presets:${NC}"
+echo -e "${cyan}║${NC}   ${cyan}bracketed-segments${NC}, ${neon_blue}catppuccin-powerline${NC}, ${green}gruvbox-rainbow${NC},"
+echo -e "${cyan}║${NC}   ${green}jetpack${NC}, ${metalic_gray}nerd-font-symbols${NC}, ${cyan}no-empty-icons${NC},"
+echo -e "${cyan}║${NC}   ${neon_blue}no-nerd-font${NC}, ${green}no-runtime-versions${NC}, ${neon_blue}pastel-powerline${NC},"
+echo -e "${cyan}║${NC}   ${cyan}plain-text-symbols${NC}, ${green}pure-preset${NC}, ${neon_blue}tokyo-night${NC}"
+echo -e "${cyan}║${NC}"
 echo -e "${cyan}╚════════════════════════════[${metalic_gray}made with <3 by kofany & yooz${cyan}]${NC}"
 DISK
 chmod +x /etc/update-motd.d/50-diskspace
