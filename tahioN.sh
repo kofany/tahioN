@@ -485,6 +485,11 @@ fi
 
 # Create global .zshrc for all users (without Powerlevel10k)
 cat <<'ZSHRC' > /etc/skel/.zshrc
+# Load welcome screen (fade-in logo + minimal MOTD)
+if [ -f /etc/profile.d/tahion_welcome.sh ]; then
+    source /etc/profile.d/tahion_welcome.sh
+fi
+
 # Use globally installed zinit
 ZINIT_HOME="/usr/local/share/zinit/zinit.git"
 
@@ -646,7 +651,7 @@ chmod 644 /etc/skel/.zshrc
 mkdir -p /etc/skel/.config
 starship preset catppuccin-powerline -o /etc/skel/.config/starship.toml >/dev/null 2>&1
 
-# Copy to root home directory
+# Copy to root home directory (will include welcome screen sourcing)
 cp /etc/skel/.zshrc /root/.zshrc
 mkdir -p /root/.config
 starship preset catppuccin-powerline -o /root/.config/starship.toml >/dev/null 2>&1
@@ -708,37 +713,36 @@ cat > /etc/profile.d/tahion_welcome.sh <<'WELCOME'
 [ -n "$TAHION_WELCOME_SHOWN" ] && return
 export TAHION_WELCOME_SHOWN=1
 
-# Fade-in logo function
-show_welcome_logo() {
-    clear
-    
-    local logo=(
-    "                                             ,ggg, ,ggggggg,  "
-    "   I8               ,dPYb,                  dP\"\"Y8,8P\"\"\"\"\"Y8b "
-    "   I8               IP'\`Yb                  Yb, \`8dP'     \`88 "
-    "88888888            I8  8I      gg           \`\"  88'       88 "
-    "   I8               I8  8'      \"\"               88        88 "
-    "   I8     ,gggg,gg  I8 dPgg,    gg     ,ggggg,   88        88 "
-    "   I8    dP\"  \"Y8I  I8dP\" \"8I   88    dP\"  \"Y8ggg88        88 "
-    "  ,I8,  i8'    ,8I  I8P    I8   88   i8'    ,8I  88        88 "
-    " ,d88b,,d8,   ,d8b,,d8     I8,_,88,_,d8,   ,d8'  88        Y8,"
-    " 8P\"\"Y8P\"Y8888P\"\`Y888P     \`Y88P\"\"Y8P\"Y8888P\"    88        \`Y8"
-    )
-    
-    # Center logo and fade-in with colors
-    for line in "${logo[@]}"; do
-        r=$((50 + RANDOM % 50))
-        g=$((200 + RANDOM % 55))
-        b=$((100 + RANDOM % 100))
-        echo -e "\e[38;2;${r};${g};${b}m${line}\e[0m"
-    done
-    
-    sleep 1
-    clear
-}
+clear
 
-# Show logo then MOTD
-show_welcome_logo
+# Logo array (same as banner)
+logo=(
+"                                             ,ggg, ,ggggggg,  "
+"   I8               ,dPYb,                  dP\"\"Y8,8P\"\"\"\"\"Y8b "
+"   I8               IP'\`Yb                  Yb, \`8dP'     \`88 "
+"88888888            I8  8I      gg           \`\"  88'       88 "
+"   I8               I8  8'      \"\"               88        88 "
+"   I8     ,gggg,gg  I8 dPgg,    gg     ,ggggg,   88        88 "
+"   I8    dP\"  \"Y8I  I8dP\" \"8I   88    dP\"  \"Y8ggg88        88 "
+"  ,I8,  i8'    ,8I  I8P    I8   88   i8'    ,8I  88        88 "
+" ,d88b,,d8,   ,d8b,,d8     I8,_,88,_,d8,   ,d8'  88        Y8,"
+" 8P\"\"Y8P\"Y8888P\"\`Y888P     \`Y88P\"\"Y8P\"Y8888P\"    88        \`Y8"
+)
+
+# Fade-in effect - same as banner() but 1 second instead of 2
+for line in "${logo[@]}"; do
+    r=$((50 + RANDOM % 50))
+    g=$((200 + RANDOM % 55))
+    b=$((100 + RANDOM % 100))
+    echo -e "\e[38;2;${r};${g};${b}m${line}\e[0m"
+    sleep 0.1
+done
+echo
+
+sleep 1
+clear
+
+# Show minimal MOTD
 run-parts --lsbsysinit /etc/update-motd.d 2>/dev/null
 WELCOME
 
@@ -798,7 +802,7 @@ for line in "${logo[@]}"; do
 done
 
 echo ""
-echo -e "${cyan}║${NC} ${neon_blue}ℹ${NC}  For full motd just type ${magenta}motd${NC}"
+echo -e "${cyan}${NC} ${neon_blue}ℹ${NC}  For full motd just type ${magenta}motd${NC}"
 echo ""
 MINIMAL
 chmod +x /etc/update-motd.d/00-minimal
