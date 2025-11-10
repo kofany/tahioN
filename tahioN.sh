@@ -85,8 +85,9 @@ draw_progress() {
     local minutes=$((elapsed / 60))
     local seconds=$((elapsed % 60))
 
-    # Wyczyść ekran i ukryj kursor
-    clear
+    # Przesuń kursor na początek i wyczyść ekran (bez migotania)
+    tput cup 0 0
+    tput ed
     tput civis
 
     # Cyberpunk header z open-ended frame (no right border)
@@ -521,7 +522,7 @@ fi
 
 # Pobierz informacje
 HOSTNAME=$(hostname -s)
-USERNAME=$(whoami)
+USERNAME="${USER:-$(logname 2>/dev/null || whoami)}"
 DATE=$(date "+%A, %d %B %Y")
 
 # Cyberpunk header
