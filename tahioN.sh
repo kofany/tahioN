@@ -172,11 +172,18 @@ complete_task() {
         kill $SPINNER_PID 2>/dev/null
         wait $SPINNER_PID 2>/dev/null
         SPINNER_PID=0
+        sleep 0.15  # Poczekaj aż terminal zakończy ostatnie odświeżenie
     fi
 
     TASKS_STATUS[$task_idx]=2
+
+    # Wyczyść ekran przed narysowaniem końcowego stanu
+    tput cup 0 0 2>/dev/null
+    tput ed 2>/dev/null
+    sleep 0.02
+
     draw_progress
-    sleep 0.3
+    sleep 0.4  # Dłuższa pauza dla stabilności między taskami
 }
 
 
@@ -510,15 +517,18 @@ cat > /etc/update-motd.d/00-header <<'HEADER'
 
 # Kolory
 cyan='\e[36m'
-green='\e[32m'
+neon_blue='\e[96m'
+red='\e[31m'
+blue='\e[34m'
 yellow='\e[33m'
+green='\e[32m'
 NC='\e[0m'
 
 # Losuj reklamę z pliku ads.txt
 if [ -f /etc/tahion/ads.txt ]; then
     AD_LINE=$(shuf -n 1 /etc/tahion/ads.txt)
 else
-    AD_LINE="⚡ tahioN IRC Shell Installer"
+    AD_LINE="${red}⚡${NC} tahioN IRC Shell Installer"
 fi
 
 # Pobierz informacje
@@ -527,9 +537,9 @@ USERNAME="${USER:-$(logname 2>/dev/null || whoami)}"
 DATE=$(date "+%A, %d %B %Y")
 
 # Cyberpunk header
-echo -e "${cyan}╔═[ ${yellow}${HOSTNAME}${cyan} ]═══[ ${green}${AD_LINE}${cyan}"
-echo -e "${cyan}║${NC} ${yellow}⚡ ACCESS GRANTED ⚡${NC} Entity ${green}${USERNAME}${NC} breached ${yellow}${HOSTNAME}${NC} mainframe"
-echo -e "${cyan}║${NC} ${green}⧗ System Clock:${NC} ${DATE}"
+echo -e "${cyan}╔═[ ${yellow}${HOSTNAME}${cyan} ]═══[ ${neon_blue}${AD_LINE}${cyan}"
+echo -e "${cyan}║${NC} ${red}⚡ ACCESS GRANTED ⚡${NC} Entity ${green}${USERNAME}${NC} breached ${yellow}${HOSTNAME}${NC} mainframe"
+echo -e "${cyan}║${NC} ${blue}⧗${NC} System Clock: ${DATE}"
 HEADER
 chmod +x /etc/update-motd.d/00-header
 
@@ -539,8 +549,10 @@ cat > /etc/update-motd.d/10-sysinfo <<'SYSINFO'
 
 # Kolory
 cyan='\e[36m'
-green='\e[32m'
+light_grey='\e[90m'
+light_green='\e[92m'
 yellow='\e[33m'
+magenta='\e[35m'
 NC='\e[0m'
 
 # Pobierz informacje systemowe
@@ -551,10 +563,10 @@ LOAD=$(cat /proc/loadavg | awk '{print $1" "$2" "$3}')
 # Format uptime na cyberpunk
 UPTIME_CYBER=$(echo "$UPTIME_RAW" | sed 's/hours\?/h/; s/minutes\?/m/; s/days\?/d/; s/,//g')
 
-echo -e "${cyan}║${NC} ${green}∞ Core Runtime:${NC} ${UPTIME_CYBER} operational cycle"
-echo -e "${cyan}║${NC} ${green}⬢ Active Entities:${NC} ${USERS} nodes synchronized"
-echo -e "${cyan}║${NC} ${green}⚙ Processing Load:${NC} ${LOAD} nominal"
-echo -e "${cyan}║${NC} ${green}➜ Execute 'tahion' protocol for command matrix.${NC}"
+echo -e "${cyan}║${NC} ${yellow}∞${NC} Core Runtime: ${UPTIME_CYBER} operational cycle"
+echo -e "${cyan}║${NC} ${light_grey}⬢${NC} Active Entities: ${USERS} nodes synchronized"
+echo -e "${cyan}║${NC} ${light_green}⚙${NC} Processing Load: ${LOAD} nominal"
+echo -e "${cyan}║${NC} ${magenta}➜${NC} Execute '${magenta}tahion${NC}' protocol for command matrix."
 SYSINFO
 chmod +x /etc/update-motd.d/10-sysinfo
 
@@ -564,13 +576,13 @@ cat > /etc/update-motd.d/50-diskspace <<'DISK'
 
 # Kolory
 cyan='\e[36m'
+neon_blue='\e[96m'
 green='\e[32m'
-yellow='\e[33m'
 metalic_gray='\e[90m'
 NC='\e[0m'
 
 echo -e "${cyan}║${NC}"
-echo -e "${cyan}║${NC} ${yellow}◆ Data Vault Allocation:${NC}"
+echo -e "${cyan}║${NC} ${neon_blue}◆${NC} Data Vault Allocation:"
 echo -e "${cyan}║${NC} ${green}Partition      Capacity  Allocated  Available  Usage  Mount Vector${NC}"
 
 # Pokaż wykorzystanie dysków (bez tmpfs, devtmpfs)
@@ -1036,7 +1048,7 @@ fi
 echo -e "[sshd]\nmaxretry = $max_attempts\nport = $ssh_port" > /etc/fail2ban/jail.d/jail-debian.local
 
 # Zrestartuj Fail2Ban, aby zastosować nowe ustawienia
-sudo systemctl restart fail2ban
+systemctl restart fail2ban --quiet --no-pager >/dev/null 2>&1
 
 # sshd_config
 rm_file "/etc/ssh/sshd_config"
@@ -1680,15 +1692,9 @@ sleep 1
 tput cnorm
 clear
 
-# Wyświetl log instalacji
+# Info o logu instalacji
 echo -e "${cyan}╔═══════════════════════════════════════════════════════════════════${NC}"
-echo -e "${cyan}║${NC}  ${yellow}INSTALLATION LOG${NC}"
-echo -e "${cyan}╚═══════════════════════════════════════════════════════════════════${NC}\n"
-
-cat "$LOG_FILE"
-
-echo ""
-echo -e "${cyan}╔═══════════════════════════════════════════════════════════════════${NC}"
+echo -e "${cyan}║${NC}  ${green}✓ Installation completed${NC}"
 echo -e "${cyan}║${NC}  ${green}Full log saved to: ${LOG_FILE}${NC}"
 echo -e "${cyan}╚═══════════════════════════════════════════════════════════════════${NC}\n"
 
