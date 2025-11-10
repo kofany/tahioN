@@ -97,7 +97,7 @@ draw_progress() {
     tput civis 2>/dev/null
 
     # Cyberpunk header with open-ended frame (no right border)
-    echo -e "${cyan}╔═══[${yellow}⚡ tahioN v1.1 ⚡${cyan}]═══[${green}DEPLOYING IRC MAINFRAME${cyan}]${NC}"
+    echo -e "${cyan}╔═══[${yellow}⚡ tahioN v1.3 ⚡${cyan}]═══[${green}DEPLOYING IRC MAINFRAME${cyan}]${NC}"
     echo -e "${cyan}║${NC}"
 
     # Progress bar
@@ -819,7 +819,7 @@ for line in "${logo[@]}"; do
 done
 
 echo ""
-echo -e "${cyan}${NC} ${magenta}ℹ${NC} Commands: ${neon_blue}motd ${magenta}❯${NC} tahio ${magenta}❯${NC} tahio pl ${magenta}❯${NC} pomoc ${NC}"
+echo -e "${cyan}${NC} ${magenta}ℹ${NC} Commands: ${neon_blue}motd ${magenta}❯${NC} tahion ${magenta}❯${NC} tahio pl ${magenta}❯${NC} pomoc ${NC}"
 echo ""
 MINIMAL
 chmod +x /etc/update-motd.d/00-minimal
