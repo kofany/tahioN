@@ -715,7 +715,6 @@ export TAHION_WELCOME_SHOWN=1
 
 clear
 
-# Logo array (same as banner)
 logo=(
 "                                             ,ggg, ,ggggggg,  "
 "   I8               ,dPYb,                  dP\"\"Y8,8P\"\"\"\"\"Y8b "
@@ -743,7 +742,7 @@ fade_in_logo() {
             printf '\e[%d;%dH\e[38;2;%sm%s\e[m' "$line_num" "$start_col" "$color" "$line"
             ((line_num++))
         done
-        sleep 0.15
+        sleep 0.25
     done
     printf '\e[2J'
     line_num=$start_line
@@ -754,7 +753,7 @@ fade_in_logo() {
         printf '\e[%d;%dH\e[38;2;%d;%d;%sm%s\e[m' "$line_num" "$start_col" "$r" "$g" "$b" "$line"
         ((line_num++))
     done
-    sleep 1
+    sleep 1.5
 }
 
 fade_in_logo
