@@ -86,9 +86,10 @@ draw_progress() {
     local seconds=$((elapsed % 60))
 
     # Przesuń kursor na początek i wyczyść ekran (bez migotania)
-    tput cup 0 0
-    tput ed
-    tput civis
+    tput cup 0 0 2>/dev/null
+    tput ed 2>/dev/null
+    sleep 0.01  # Mikro-pauza dla stabilności terminala
+    tput civis 2>/dev/null
 
     # Cyberpunk header z open-ended frame (no right border)
     echo -e "${cyan}╔═══[${yellow}⚡ tahioN v1.0 ⚡${cyan}]═══[${green}DEPLOYING IRC MAINFRAME${cyan}]${NC}"
@@ -142,7 +143,7 @@ spinner_animation() {
     while true; do
         SPINNER_CURRENT_CHAR="${SPINNER_CHARS:$idx:1}"
         draw_progress
-        sleep 0.1
+        sleep 0.25  # Wolniejsze odświeżanie zapobiega race condition
         idx=$(( (idx + 1) % ${#SPINNER_CHARS} ))
     done
 }
