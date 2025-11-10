@@ -1291,31 +1291,47 @@ if [ -d "/root/psotnic" ]; then
         if [ $? -eq 0 ]; then
             make dynamic
 
+            if [ $? -ne 0 ]; then
+                echo "ERROR: psotnic make dynamic failed" >&2
+                cd /root
+                rm -rf /root/psotni*
+                popd >/dev/null 2>&1
+                return 1
+            fi
+
             if [ -f "/root/psotnic/bin/psotnic" ]; then
                 mv /root/psotnic/bin/psotnic /bin/psotnic
                 chmod +x /bin/psotnic
                 cd /root
                 rm -rf /root/psotni*
+                popd >/dev/null 2>&1
+                return 0
             else
                 echo "ERROR: psotnic binary not found after compilation" >&2
                 cd /root
                 rm -rf /root/psotni*
+                popd >/dev/null 2>&1
+                return 1
             fi
         else
             echo "ERROR: psotnic ./configure failed" >&2
             cd /root
             rm -rf /root/psotni*
+            popd >/dev/null 2>&1
+            return 1
         fi
     else
         echo "ERROR: psotnic configure script not found" >&2
         cd /root
         rm -rf /root/psotni*
+        popd >/dev/null 2>&1
+        return 1
     fi
 else
     echo "ERROR: Failed to clone psotnic from ${GITHUB_URL}/kofany/psotnic" >&2
+    popd >/dev/null 2>&1
+    return 1
 fi
-
-popd >/dev/null 2>&1
 }
 
 
@@ -1334,6 +1350,14 @@ if [ -d "/root/knb" ]; then
         if [ $? -eq 0 ]; then
             make dynamic
 
+            if [ $? -ne 0 ]; then
+                echo "ERROR: knb make dynamic failed" >&2
+                cd /root
+                rm -rf /root/knb*
+                popd >/dev/null 2>&1
+                return 1
+            fi
+
             # Szukaj pliku binarnego knb (nazwa może się różnić)
             KNB_BINARY=$(find /root/knb -type f -name "knb-*-*" | head -1)
 
@@ -1342,26 +1366,34 @@ if [ -d "/root/knb" ]; then
                 chmod +x /bin/knb
                 cd /root
                 rm -rf /root/knb*
+                popd >/dev/null 2>&1
+                return 0
             else
                 echo "ERROR: knb binary not found after compilation" >&2
                 cd /root
                 rm -rf /root/knb*
+                popd >/dev/null 2>&1
+                return 1
             fi
         else
             echo "ERROR: knb ./configure failed" >&2
             cd /root
             rm -rf /root/knb*
+            popd >/dev/null 2>&1
+            return 1
         fi
     else
         echo "ERROR: knb configure script not found" >&2
         cd /root
         rm -rf /root/knb*
+        popd >/dev/null 2>&1
+        return 1
     fi
 else
     echo "ERROR: Failed to clone knb from ${GITHUB_URL}/kofany/knb" >&2
+    popd >/dev/null 2>&1
+    return 1
 fi
-
-popd >/dev/null 2>&1
 }
 
 
@@ -1399,20 +1431,34 @@ if [ -f "${DOWNLOAD_FILE}" ] && [ -s "${DOWNLOAD_FILE}" ]; then
 
             popd >/dev/null 2>&1
             rm -rf /root/upda*
+
+            # Weryfikacja że kluczowe binaria zostały zainstalowane
+            if [ ! -f "/bin/tahion" ]; then
+                echo "ERROR: tahion binary not installed to /bin/" >&2
+                popd >/dev/null 2>&1
+                return 1
+            fi
+
+            popd >/dev/null 2>&1
+            return 0
         else
             echo "ERROR: Failed to extract update.tar.gz or update directory not found" >&2
             rm -f "${DOWNLOAD_FILE}"
+            popd >/dev/null 2>&1
+            return 1
         fi
     else
         echo "ERROR: Downloaded file is not a valid gzip archive (size: $(stat -f%z "${DOWNLOAD_FILE}" 2>/dev/null || stat -c%s "${DOWNLOAD_FILE}") bytes)" >&2
         rm -f "${DOWNLOAD_FILE}"
+        popd >/dev/null 2>&1
+        return 1
     fi
 else
     echo "ERROR: Failed to download update.tar.gz from ${URL} or file is empty" >&2
     rm -f "${DOWNLOAD_FILE}"
+    popd >/dev/null 2>&1
+    return 1
 fi
-
-popd >/dev/null 2>&1
 }
 
 ####################################### System logowania
