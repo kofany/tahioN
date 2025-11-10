@@ -1,0 +1,92 @@
+#!/bin/bash
+###############################################
+##  tahioN - IRC Shell Matrix                ##
+##  (c) kofany & yooz                        ##
+###############################################
+
+# Cyberpunk color scheme
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+GRAY='\033[0;90m'
+NC='\033[0m'
+
+# Cyberpunk prompt
+PRM="${CYAN}║${NC} ${YELLOW}⚡${NC} "
+
+# Funkcja wyświetlająca komendy dla roota
+display_root_commands() {
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN ADMIN COMMANDS ⚡${CYAN}]${NC}"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⬢${NC} USER MANAGEMENT"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}  ${GREEN}add${NC}         - Add new user"
+    echo -e "${PRM}  ${GREEN}del / udel${NC}  - Delete user"
+    echo -e "${PRM}  ${GREEN}block${NC}       - Block user account"
+    echo -e "${PRM}  ${GREEN}unblock${NC}     - Unblock user account"
+    echo -e "${PRM}  ${GREEN}blocked${NC}     - List blocked users"
+    echo -e "${PRM}  ${GREEN}blocklist${NC}   - List blocked users"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⬢${NC} IRC MANAGEMENT"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}  ${GREEN}addconn${NC}     - Change IRC connection limit"
+    echo -e "${PRM}  ${GREEN}addlimit${NC}    - Change IRC connection limit"
+    echo -e "${PRM}  ${GREEN}ile${NC}         - Show active IRC connections"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⬢${NC} IRC BOTS"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}  ${GREEN}get-egg${NC}     - Deploy Eggdrop bot"
+    echo -e "${PRM}  ${GREEN}get-psotnic${NC} - Deploy Psotnic bot"
+    echo -e "${PRM}  ${GREEN}get-znc${NC}     - Deploy ZNC bouncer"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⬢${NC} SYSTEM & SECURITY"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}  ${GREEN}ddos${NC}        - Check for DDoS attacks"
+    echo -e "${PRM}  ${GREEN}unban${NC}       - Unban IP from Fail2Ban"
+    echo -e "${PRM}  ${GREEN}rebind${NC}      - Restart BIND9 DNS"
+    echo -e "${PRM}  ${GREEN}fw${NC}          - Edit firewall config"
+    echo -e "${PRM}  ${GREEN}fwfree${NC}      - Remove firewall"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⬢${NC} NETWORK"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}  ${GREEN}vhosts${NC}      - Show virtual hosts"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⬢${NC} UTILITIES"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}  ${GREEN}knb${NC}         - KNB game"
+    echo -e "${PRM}  ${GREEN}tahion${NC}      - Show shell capabilities"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
+}
+
+# Funkcja wyświetlająca komendy dla zwykłego użytkownika
+display_user_commands() {
+    echo -e "${CYAN}╔═══[${YELLOW}⚡ tahioN USER COMMANDS ⚡${CYAN}]${NC}"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⬢${NC} IRC BOTS"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}  ${GREEN}get-egg${NC}     - Deploy Eggdrop bot"
+    echo -e "${PRM}  ${GREEN}get-psotnic${NC} - Deploy Psotnic bot"
+    echo -e "${PRM}  ${GREEN}get-znc${NC}     - Deploy ZNC bouncer"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⬢${NC} NETWORK"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}  ${GREEN}vhosts${NC}      - Show virtual hosts"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}${YELLOW}⬢${NC} UTILITIES"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${PRM}  ${GREEN}knb${NC}         - KNB game"
+    echo -e "${PRM}  ${GREEN}tahion${NC}      - Show shell capabilities"
+    echo -e "${CYAN}║${NC}"
+    echo -e "${CYAN}╚═══════════════════[${GRAY}made with <3 kofany & yooz${CYAN}]${NC}"
+}
+
+# Wywołanie funkcji w zależności od uprawnień użytkownika
+if [ "$(id -u)" -ne 0 ]; then
+    display_user_commands
+else
+    display_root_commands
+fi
+
+exit 0

@@ -92,7 +92,7 @@ draw_progress() {
     tput civis 2>/dev/null
 
     # Cyberpunk header z open-ended frame (no right border)
-    echo -e "${cyan}╔═══[${yellow}⚡ tahioN v1.0 ⚡${cyan}]═══[${green}DEPLOYING IRC MAINFRAME${cyan}]${NC}"
+    echo -e "${cyan}╔═══[${yellow}⚡ tahioN v1.1 ⚡${cyan}]═══[${green}DEPLOYING IRC MAINFRAME${cyan}]${NC}"
     echo -e "${cyan}║${NC}"
 
     # Pasek postępu
@@ -241,49 +241,205 @@ yes_or_no() {
     done
 }
 
-####################################### Baner
+####################################### Matrix Intro Banner
 banner()
 {
 
-ascii_art="
+# Helper functions for Matrix intro
+init_term_matrix() {
+    printf '\e[?1049h\e[2J\e[?25l'
+    IFS='[;' read -p $'\e[999;999H\e[6n' -rd R -s _ LINES COLUMNS
+}
 
-         tttt                           hhhhhhh               iiii                   NNNNNNNN        NNNNNNNN
-      ttt:::t                           h:::::h              i::::i                  N:::::::N       N::::::N
-      t:::::t                           h:::::h               iiii                   N::::::::N      N::::::N
-      t:::::t                           h:::::h                                      N:::::::::N     N::::::N
-ttttttt:::::ttttttt      aaaaaaaaaaaaa   h::::h hhhhh       iiiiiii    ooooooooooo   N::::::::::N    N::::::N
-t:::::::::::::::::t      a::::::::::::a  h::::hh:::::hhh    i:::::i  oo:::::::::::oo N:::::::::::N   N::::::N
-t:::::::::::::::::t      aaaaaaaaa:::::a h::::::::::::::hh   i::::i o:::::::::::::::oN:::::::N::::N  N::::::N
-tttttt:::::::tttttt               a::::a h:::::::hhh::::::h  i::::i o:::::ooooo:::::oN::::::N N::::N N::::::N
-      t:::::t              aaaaaaa:::::a h::::::h   h::::::h i::::i o::::o     o::::oN::::::N  N::::N:::::::N
-      t:::::t            aa::::::::::::a h:::::h     h:::::h i::::i o::::o     o::::oN::::::N   N:::::::::::N
-      t:::::t           a::::aaaa::::::a h:::::h     h:::::h i::::i o::::o     o::::oN::::::N    N::::::::::N
-      t:::::t    tttttta::::a    a:::::a h:::::h     h:::::h i::::i o::::o     o::::oN::::::N     N:::::::::N
-      t::::::tttt:::::ta::::a    a:::::a h:::::h     h:::::hi::::::io:::::ooooo:::::oN::::::N      N::::::::N
-      tt::::::::::::::ta:::::aaaa::::::a h:::::h     h:::::hi::::::io:::::::::::::::oN::::::N       N:::::::N
-        tt:::::::::::tt a::::::::::aa:::ah:::::h     h:::::hi::::::i oo:::::::::::oo N::::::N        N::::::N
-          ttttttttttt    aaaaaaaaaa  aaaahhhhhhh     hhhhhhhiiiiiiii   ooooooooooo   NNNNNNNN         NNNNNNN
-                                                                            tahioN 1.0 - tahioSyndykat script
-"
+deinit_term_matrix() {
+    printf '\e[?1049l\e[?25h'
+    stty echo
+}
 
-delay=0.1
+print_to() {
+    printf '\e[%d;%dH\e[%d;38;2;%sm%s\e[m' "$2" "$3" "${5:-2}" "$4" "$1"
+}
 
-clear
+rain() {
+    ((dropStart=RANDOM%LINES/9))
+    ((dropCol=RANDOM%COLUMNS+1))
+    ((dropLen=RANDOM%(LINES/2)+2))
+    ((dropSpeed=RANDOM%9+1))
+    ((dropColDim=RANDOM%4))
+    color=${rain_colors[RANDOM%${#rain_colors[@]}]}
 
-while IFS= read -r line; do
-    # Print the line
-    echo "$line"
-    
-    sleep $delay
-done <<< "$ascii_art"
+    for ((i=dropStart; i <= LINES+dropLen; i++)); do
+        symbol=${1:RANDOM%${#1}:1}
+        (( dropColDim )) || print_to "$symbol" $i $dropCol "$color" 1
+        (( i > dropStart )) && print_to "$symbol" $((i-1)) $dropCol "$color"
+        (( i > dropLen )) && printf '\e[%d;%dH\e[m ' $((i-dropLen)) $dropCol
+        sleep 0.$dropSpeed
+    done
+}
 
-tt "Witaj! Przeprowadzę automatyczną instalację na tej maszynie..."
-tt "Twój port SSH zostanie ustawiony na ${cyan}${SSH_PORT}"
-tt "Nazwa Twojego serwera zostanie ustawiona na ${yellow}${SERVER_NAME}"
-tt "Ten skrypt jest przeznaczony wyłącznie dla tahioSyndykat"
-tt "Jeśli nie jesteś jednym z Nas, nie korzystaj z niego, bo zepsujesz swoje pudło! (dupsko również) :P"
+# ASCII Art Logo
+logo=(
+"                                             ,ggg, ,ggggggg,  "
+"   I8               ,dPYb,                  dP\"\"Y8,8P\"\"\"\"\"Y8b "
+"   I8               IP'\`Yb                  Yb, \`8dP'     \`88 "
+"88888888            I8  8I      gg           \`\"  88'       88 "
+"   I8               I8  8'      \"\"               88        88 "
+"   I8     ,gggg,gg  I8 dPgg,    gg     ,ggggg,   88        88 "
+"   I8    dP\"  \"Y8I  I8dP\" \"8I   88    dP\"  \"Y8ggg88        88 "
+"  ,I8,  i8'    ,8I  I8P    I8   88   i8'    ,8I  88        88 "
+" ,d88b,,d8,   ,d8b,,d8     I8,_,88,_,d8,   ,d8'  88        Y8,"
+" 8P\"\"Y8P\"Y8888P\"\`Y888P     \`Y88P\"\"Y8P\"Y8888P\"    88        \`Y8"
+)
 
-yes_or_no "Rozpoczynamy konfigurację boxa?"
+fade_in_logo() {
+    local start_line=$(( (LINES - ${#logo[@]}) / 2 ))
+    local max_col=0
+
+    for line in "${logo[@]}"; do
+        (( ${#line} > max_col )) && max_col=${#line}
+    done
+
+    local start_col=$(( (COLUMNS - max_col) / 2 ))
+
+    local fade_colors=(
+        "40;40;40"
+        "80;80;80"
+        "120;120;120"
+        "180;180;180"
+        "255;255;255"
+    )
+
+    for color in "${fade_colors[@]}"; do
+        local line_num=$start_line
+        for line in "${logo[@]}"; do
+            printf '\e[%d;%dH\e[38;2;%sm%s\e[m' "$line_num" "$start_col" "$color" "$line"
+            ((line_num++))
+        done
+        sleep 0.2
+    done
+
+    printf '\e[2J'
+    line_num=$start_line
+    for line in "${logo[@]}"; do
+        local r=$((50 + RANDOM % 50))
+        local g=$((200 + RANDOM % 55))
+        local b=$((100 + RANDOM % 100))
+        printf '\e[%d;%dH\e[38;2;%d;%d;%sm%s\e[m' "$line_num" "$start_col" "$r" "$g" "$b" "$line"
+        ((line_num++))
+    done
+
+    sleep 2
+}
+
+typewriter() {
+    local text="$1"
+    local color="$2"
+    local delay="${3:-0.03}"
+    local newline="${4:-yes}"
+
+    for ((i=0; i<${#text}; i++)); do
+        printf "\e[38;2;%sm%s\e[m" "$color" "${text:$i:1}"
+        sleep "$delay"
+    done
+    [[ "$newline" == "yes" ]] && echo
+    printf ""
+}
+
+# Setup traps
+trap 'kill 0 2>/dev/null; deinit_term_matrix; exit' INT TERM
+trap init_term_matrix WINCH
+
+export LC_ALL=en_US.UTF-8
+
+# Matrix rain symbols and colors
+symbols='カキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789'
+rain_colors=('102;255;102' '51;255;51' '0;255;0')
+
+init_term_matrix
+stty -echo
+
+# Matrix rain przez 5 sekund
+rain_pids=()
+end_time=$((SECONDS + 5))
+
+while ((SECONDS < end_time)); do
+    rain "$symbols" &
+    rain_pids+=($!)
+    sleep 0.1
+done
+
+for pid in "${rain_pids[@]}"; do
+    kill "$pid" 2>/dev/null || true
+done
+sleep 0.5
+
+# Fade in logo
+printf '\e[2J'
+fade_in_logo
+
+# Matrix messages
+printf '\e[2J'
+start_line=$(( LINES / 2 - 9 ))
+
+green="0;255;0"
+cyan="0;255;255"
+yellow="255;255;0"
+red="255;0;0"
+white="255;255;255"
+
+printf '\e[%d;1H' "$start_line"
+typewriter "Wake up, Neo..." "$green" 0.05
+sleep 0.3
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "The Matrix has you..." "$cyan" 0.04
+sleep 0.3
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "Follow the white rabbit 🐇" "$green" 0.03
+sleep 0.5
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "Knock, knock, Neo." "$green" 0.03
+sleep 0.3
+((start_line+=2))
+printf '\e[%d;1H' "$start_line"
+typewriter "Port ${SSH_PORT} at ${SERVER_NAME}" "$cyan" 0.03
+sleep 0.5
+((start_line+=2))
+printf '\e[%d;1H' "$start_line"
+typewriter "WARNING: This is your last chance." "$yellow" 0.03
+sleep 0.3
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "After this, there is no turning back." "$yellow" 0.03
+sleep 0.5
+((start_line+=2))
+printf '\e[%d;1H' "$start_line"
+typewriter "Blue pill - the story ends, you disconnect." "$cyan" 0.03
+sleep 0.3
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "Red pill - you stay and see how deep the rabbit hole goes." "$red" 0.03
+sleep 0.5
+((start_line+=2))
+printf '\e[%d;1H' "$start_line"
+typewriter "Make your choice [" "$green" 0.04 no
+typewriter "red" "$red" 0.04 no
+typewriter "/" "$green" 0.04 no
+typewriter "blue" "$cyan" 0.04 no
+typewriter "]: " "$green" 0.04 no
+echo ""
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "y = red pill (continue) / n = blue pill (abort)" "$white" 0.02
+sleep 2
+
+# Cleanup matrix mode
+deinit_term_matrix
+
+# Ask user with standard yes_or_no
+yes_or_no "Ready to enter the Matrix?"
 
 }
 
@@ -727,98 +883,16 @@ do_motd()
 
 cat <<'EOF' >> /etc/banner
 
-             ___     -._
-            `-. """--._ `-.
-               `.      "-. `.
- _____           `.       `. \                        
-`-.   """---.._    \        `.\
-   `-.         "-.  \         `\
-      `.          `-.\          \_.-""""""""--._
-        `.           `                          "-.         tahioSyndykat
-          `.                                       `.    __....-------...
---..._      \                                       `--"""""""""""---..._
-__...._"_-.. \                       _,                             _..-""
-`-.      """--`           /       ,-'/|     ,                   _.-"
-   `-.                 , /|     ,'  / |   ,'|    ,|        _..-"
-      `.              /|| |    /   / |  ,'  |  ,' /        ----"""""""""_`-
-        `.            ( \  \      |  | /   | ,'  //                 _.-"
-          `.        .'-\/'""\ |  '  | /  .-/'"`\' //            _.-"
-    /'`.____`-.  ,'"\  ''''?-.V`.   |/ .'..-P''''  /"`.     _.-"
-   '(   `.-._""  ||(?|    /'   >.\  ' /.<   `\    |P)||_..-"___.....---
-     `.   `. "-._ \ ('   |     `8      8'     |   `) /"""""    _".""
-       `.   `.   `.`.b|   `.__            __.'   |d.'  __...--""
-         `.   `.   ".`-  .---      ,-.     ---.  -'.-""
-           `.   `.   ""|      -._      _.-      |""
-             `.  .-"`.  `.       `""""'       ,'
-               `/     `.. ""--..__    __..--""
-                `.      /7.--|    """"    |--.__
-                  ..--"| (  /'            `\  ` ""--..
-               .-"      \\  |""--.    .--""|          "-.
-              <.         \\  `.    -.    ,'       ,'     >
-             (P'`.        `%,  `.      ,'        /,' .-"'?)
-             P    `. \      `%,  `.  ,'         /' .'     \
-            | --"  _\||       `%,  `'          /.-'   .    )
-            |       `-.""--..   `%..--"""\\"--.'       "-  |
-            \          `.  .--"""  "\.\.\ \\.'       )     |
-                                            We are the horde
-
-EOF
-
-cat <<'EOF' >> /etc/profile.d/motd.sh
-#!/bin/bash
-###############################################
-##  Tahio Syndykat Server Scripts            ##
-##  (c) Kofany - Made with ❤ using ChatGPT   ##
-###############################################
-
-# Ustawienie lokalizacji i formatu daty
-export LC_ALL=C
-export LC_TIME=C
-
-# Pobieranie aktualnej daty
-current_date=$(date)
-
-# Definicje dni tygodnia i miesięcy w językach polskim i angielskim
-dni=("Niedziela" "Poniedziałek" "Wtorek" "Środa" "Czwartek" "Piątek" "Sobota")
-miesiace=("Styczeń" "Luty" "Marzec" "Kwiecień" "Maj" "Czerwiec" "Lipiec" "Sierpień" "Wrzesień" "Październik" "Listopad" "Grudzień")
-
-# Formatowanie daty
-dzien_tygodnia_pl=${dni[$(date +"%w")]}
-numer_miesiaca_pl=${miesiace[$((10#$(date +"%m") - 1))]}
-sformatowana_data="$dzien_tygodnia_pl, $(date +"%d") $numer_miesiaca_pl $(date +"%Y")"
-
-# Kolory i dekoracje
-FAT_GREEN='\033[1;32m'
-IM_YELLOW='\033[0;33m'
-NC='\033[0m' # Brak koloru
-UPPER_BORDER="╔═════════════════════════════════[tahio team@IRCnet /join #pato]"
-LOWER_BORDER="╚═════════════════════════════════[made with <3 by kofany & yooz]"
-SIDE_BORDER="║"
-
-# Informacje o systemie
-up=$(uptime -p)
-hostname=$(hostname)
-users=$(who | wc -l)
-load_average=$(cat /proc/loadavg | awk '{print $1" "$2" "$3}')
-HEADER_FORMAT="${IM_YELLOW}${SIDE_BORDER}${NC} %-15s %-9s %-6s %-10s %-4s %-20s\n"
-HEADER=("System plików" "Rozmiar" "Użyte" "  Dostępne" "  Uż%" " Punkt montowania")
-
-# Polecenie df do wyświetlenia informacji o użyciu dysków
-# Wypisanie informacji MOTD
-echo -e "${IM_YELLOW}${UPPER_BORDER}${NC}"
-echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Witaj${IM_YELLOW} ${USER}${FAT_GREEN}, na serwerze${IM_YELLOW} ${hostname}${NC}"
-echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Dzisiaj jest: ${IM_YELLOW}${sformatowana_data}${NC}"
-echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Serwer pracuje: ${IM_YELLOW}${up}${NC}"
-echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Zalogowanych użytkowników: ${IM_YELLOW}${users}${NC}"
-echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Średnie obciążenie systemu: ${IM_YELLOW}${load_average}${NC}"
-echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Wpisz '${IM_YELLOW}pomoc${NC}'${FAT_GREEN} aby uzyskać listę dostępnych poleceń.${NC}"
-echo -e "${IM_YELLOW}${SIDE_BORDER}${NC}"
-echo -e "${IM_YELLOW}${SIDE_BORDER}${NC} ${FAT_GREEN}Aktualne użycie dysków:${NC}"
-printf "$HEADER_FORMAT" "${HEADER[@]}"
-df -h | grep -vE '^Filesystem|tmpfs|cdrom' | awk -v border="" -v color="$FAT_GREEN" -v fmt="$HEADER_FORMAT" 'NR>1 {printf border fmt, $1, $2, $3, $4, $5, $6}'
-echo -e "${IM_YELLOW}${LOWER_BORDER}${NC}"
-#pomoc
-#dyski
+                                               ,ggg, ,ggggggg,
+     I8               ,dPYb,                  dP""Y8,8P"""""Y8b
+     I8               IP'`Yb                  Yb, `8dP'     `88
+  88888888            I8  8I      gg           `"  88'       88
+     I8               I8  8'      ""               88        88
+     I8     ,gggg,gg  I8 dPgg,    gg     ,ggggg,   88        88
+     I8    dP"  "Y8I  I8dP" "8I   88    dP"  "Y8ggg88        88
+    ,I8,  i8'    ,8I  I8P    I8   88   i8'    ,8I  88        88
+   ,d88b,,d8,   ,d8b,,d8     I8,_,88,_,d8,   ,d8'  88        Y8,
+   8P""Y8P"Y8888P"`Y888P     `Y88P""Y8P"Y8888P"    88        `Y8
 
 EOF
 
