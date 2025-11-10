@@ -4,7 +4,7 @@
 ##  (c) kofany - made with <3 using ChatGPT  ##
 ###############################################
 
-# Kolory
+# Colors
 light_blue='\033[1;34m'
 green='\033[0;32m'
 cyan='\033[0;36m'
@@ -15,10 +15,10 @@ GREEN="\033[32m"
 YELLOW="\033[33m"
 CYAN="\033[36m"
 RESET="\033[0m"
-NC='\033[0m' # Brak koloru
+NC='\033[0m' # No color
 
 
-####################################### Pisanie tekstu
+####################################### Text printing
 tt() {
     if [ "$#" -eq 1 ]; then
         text="${1}"
@@ -33,7 +33,7 @@ tt() {
 
 ####################################### Progress Bar System
 
-# Globalne zmienne dla progress bar
+# Global variables for the progress bar
 declare -a TASKS_NAMES
 declare -a TASKS_STATUS  # 0=pending, 1=in_progress, 2=completed
 CURRENT_TASK_IDX=0
@@ -41,7 +41,7 @@ START_TIME=0
 SPINNER_PID=0
 SPINNER_CHARS='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
 
-# Inicjalizacja tasków - Cyberpunk edition
+# Initialize tasks - Cyberpunk edition
 init_tasks() {
     TASKS_NAMES=(
         "⚡ IPv6 network detection & GitHub proxy setup"
@@ -56,7 +56,7 @@ init_tasks() {
         "⚡ Binary update & system finalization"
     )
 
-    # Inicjalizacja wszystkich jako pending (0)
+    # Initialize all as pending (0)
     for i in "${!TASKS_NAMES[@]}"; do
         TASKS_STATUS[$i]=0
     done
@@ -64,38 +64,38 @@ init_tasks() {
     START_TIME=$(date +%s)
 }
 
-# Funkcja rysująca progress bar - Cyberpunk edition (open-ended frame)
+# Function drawing progress bar - Cyberpunk edition (open-ended frame)
 draw_progress() {
     local total_tasks=${#TASKS_NAMES[@]}
     local completed_tasks=0
 
-    # Policz zakończone taski
+    # Count completed tasks
     for status in "${TASKS_STATUS[@]}"; do
         if [ "$status" -eq 2 ]; then
             ((completed_tasks++))
         fi
     done
 
-    # Oblicz procent
+    # Calculate percentage
     local percent=$((completed_tasks * 100 / total_tasks))
 
-    # Oblicz elapsed time
+    # Calculate elapsed time
     local current_time=$(date +%s)
     local elapsed=$((current_time - START_TIME))
     local minutes=$((elapsed / 60))
     local seconds=$((elapsed % 60))
 
-    # Przesuń kursor na początek i wyczyść ekran (bez migotania)
+    # Move cursor to start and clear screen (without flickering)
     tput cup 0 0 2>/dev/null
     tput ed 2>/dev/null
-    sleep 0.01  # Mikro-pauza dla stabilności terminala
+    sleep 0.01  # Micro-pause for terminal stability
     tput civis 2>/dev/null
 
-    # Cyberpunk header z open-ended frame (no right border)
+    # Cyberpunk header with open-ended frame (no right border)
     echo -e "${cyan}╔═══[${yellow}⚡ tahioN v1.1 ⚡${cyan}]═══[${green}DEPLOYING IRC MAINFRAME${cyan}]${NC}"
     echo -e "${cyan}║${NC}"
 
-    # Pasek postępu
+    # Progress bar
     local bar_width=40
     local filled=$((percent * bar_width / 100))
     local empty=$((bar_width - filled))
@@ -109,7 +109,7 @@ draw_progress() {
     echo -e "${cyan}╠═══════════════════════════════════════════════════════════════════${NC}"
     echo -e "${cyan}║${NC}"
 
-    # Lista tasków
+    # Task list
     for i in "${!TASKS_NAMES[@]}"; do
         local task_name="${TASKS_NAMES[$i]}"
         local status="${TASKS_STATUS[$i]}"
@@ -137,13 +137,13 @@ draw_progress() {
     echo -e "${cyan}╚═══════════════════════════[${metalic_gray}made with <3 by kofany & yooz${cyan}]${NC}"
 }
 
-# Spinner w tle
+# Background spinner
 spinner_animation() {
     local idx=0
     while true; do
         SPINNER_CURRENT_CHAR="${SPINNER_CHARS:$idx:1}"
         draw_progress
-        sleep 0.25  # Wolniejsze odświeżanie zapobiega race condition
+        sleep 0.25  # Slower refresh prevents race conditions
         idx=$(( (idx + 1) % ${#SPINNER_CHARS} ))
     done
 }
@@ -155,11 +155,11 @@ start_task() {
     TASKS_STATUS[$task_idx]=1
     SPINNER_CURRENT_CHAR="${SPINNER_CHARS:0:1}"
 
-    # Uruchom spinner w tle
+    # Start spinner in the background
     spinner_animation &
     SPINNER_PID=$!
 
-    # Daj chwilę na wyświetlenie
+    # Give a moment to display
     sleep 0.2
 }
 
@@ -167,51 +167,51 @@ start_task() {
 complete_task() {
     local task_idx=$1
 
-    # Zatrzymaj spinner
+    # Stop spinner
     if [ $SPINNER_PID -ne 0 ]; then
         kill $SPINNER_PID 2>/dev/null
         wait $SPINNER_PID 2>/dev/null
         SPINNER_PID=0
-        sleep 0.15  # Poczekaj aż terminal zakończy ostatnie odświeżenie
+        sleep 0.15  # Wait until the terminal finishes the last refresh
     fi
 
     TASKS_STATUS[$task_idx]=2
 
-    # Wyczyść ekran przed narysowaniem końcowego stanu
+    # Clear screen before drawing final state
     tput cup 0 0 2>/dev/null
     tput ed 2>/dev/null
     sleep 0.02
 
     draw_progress
-    sleep 0.4  # Dłuższa pauza dla stabilności między taskami
+    sleep 0.4  # Longer pause for stability between tasks
 }
 
 
-####################################### Sprawdzanie root
+####################################### Root check
 
 if [ "$(id -u)" -ne 0 ]; then
-    tt "Ten skrypt wymaga uprawnień superużytkownika (root). Uruchom skrypt ponownie jako root."
+    tt "⚠ ACCESS DENIED: Root privileges required for mainframe breach."
     exit 1
 fi
 
-# Zmienne przechowujące port SSH i nazwę serwera
+# Variables storing SSH port and server name
 SSH_PORT="${1:-}"
 SERVER_NAME="${2:-}"
-# Sprawdzanie parametrów
+# Parameter validation
 if [ -z "${SSH_PORT}" ] || [ -z "${SERVER_NAME}" ]; then
-    tt "Użyj składni: bash $0 ${red}PORTSSH ${yellow}NAZWA_SERWERA\n"
-    tt "Musisz podać poprawny port dla SSH i nazwę serwera.\n"
+    tt "⚠ SYNTAX ERROR: bash $0 ${red}SSH_PORT ${yellow}SERVER_NAME\n"
+    tt "⚡ MISSING PARAMETERS: SSH port and server hostname required.\n"
     exit 1
 fi
-# Sprawdzenie, czy podane wartości portu SSH są poprawne.
+# Check if provided SSH port value is valid
 if ! [[ "${SSH_PORT}" =~ ^[1-9][0-9]{0,4}$ ]] || [ "${SSH_PORT}" -gt 65535 ]; then
-    tt "Nieprawidłowy numer portu SSH: ${SSH_PORT}. Numer portu powinien być liczbą całkowitą z zakresu 1-65535.\n"
+    tt "⚠ INVALID PORT: ${SSH_PORT}. Valid range: 1-65535.\n"
     exit 1
 fi
 
-####################################### Funkcje pomocnicze
+####################################### Helper functions
 
-####################################### Usuwanie pliku jeśli istnieje
+####################################### Remove file if exists
 rm_file()
 {
 if [ -f "${*}" ]; then
@@ -219,23 +219,23 @@ rm -rf ${*} >/dev/null 2>&1
 fi
 }
 
-# Wyjscie
+# Exit
 
 do_abort()
 {
-    tt "${red}" "Anulowanie, kończę działanie.\n"
+    tt "${red}" "⚠ BREACH ABORTED: Disconnecting from mainframe.\n"
     exit 1
 }
 
-# Tak czy nie
+# Yes or No
 
 yes_or_no() {
     while true; do
-        echo -e "${metalic_gray}$* [t/n]? \c"
+        echo -e "${metalic_gray}$* [y/n]? \c"
         read -n 1 REPLY
         echo -e "\n"
         case "$REPLY" in
-            T|t) return 0 ;;
+            Y|y) return 0 ;;
             N|n) do_abort ;;
         esac
     done
@@ -358,7 +358,7 @@ rain_colors=('102;255;102' '51;255;51' '0;255;0')
 init_term_matrix
 stty -echo
 
-# Matrix rain przez 5 sekund
+# Matrix rain for 5 seconds
 rain_pids=()
 end_time=$((SECONDS + 5))
 
@@ -438,8 +438,25 @@ sleep 2
 # Cleanup matrix mode
 deinit_term_matrix
 
+# Reset terminal completely (fix colors for progress bar)
+reset
+stty sane
+
+# Clear screen and show static logo in top-left corner
+clear
+
+# Display logo with color gradient (like fade in finale)
+for line in "${logo[@]}"; do
+    local r=$((50 + RANDOM % 50))
+    local g=$((200 + RANDOM % 55))
+    local b=$((100 + RANDOM % 100))
+    echo -e "\e[38;2;${r};${g};${b}m${line}\e[m"
+done
+
+echo ""  # Empty line before question
+
 # Ask user with standard yes_or_no
-yes_or_no "Ready to enter the Matrix?"
+yes_or_no "Ready to enter the Matrix"
 
 }
 
@@ -447,46 +464,46 @@ yes_or_no "Ready to enter the Matrix?"
 
 do_ipv6_setup()
 {
-    # Wykryj typ sieci (IPv4 vs IPv6-only)
+    # Detect network type (IPv4 vs IPv6-only)
     if ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
-        # IPv4 działa - używaj normalnych GitHub URL
+        # IPv4 works - use normal GitHub URL
         GITHUB_URL="https://github.com"
         IPV6_ONLY=false
     else
-        # IPv4 nie działa, sprawdź IPv6
+        # IPv4 doesn't work, check IPv6
         if ping -c 1 -W 2 2001:4860:4860::8888 >/dev/null 2>&1; then
-            # IPv6-only network - używaj danwin proxy
+            # IPv6-only network - use danwin proxy
             GITHUB_URL="https://danwin1210.de:1443"
             IPV6_ONLY=true
         else
-            # Brak sieci w ogóle
+            # No network at all
             echo "ERROR: No network connectivity detected!"
             exit 1
         fi
     fi
 
-    # Eksportuj zmienne dla innych funkcji
+    # Export variables for other functions
     export GITHUB_URL
     export IPV6_ONLY
 }
 
-####################################### Konfiguracja Zsh z nowoczesnymi narzędziami CLI
+####################################### Zsh Configuration with Modern CLI Tools
 
 do_zsh_setup()
 {
-# Install zinit globally (używając wykrytego GitHub URL dla wsparcia IPv6)
+# Install zinit globally (using detected GitHub URL for IPv6 support)
 if [ ! -d "/usr/local/share/zinit/zinit.git" ]; then
     mkdir -p /usr/local/share/zinit
     git clone ${GITHUB_URL}/zdharma-continuum/zinit.git /usr/local/share/zinit/zinit.git
 
-    # Weryfikacja czy zinit się zainstalował
+    # Verify zinit installation
     if [ ! -f "/usr/local/share/zinit/zinit.git/zinit.zsh" ]; then
         echo "ERROR: Failed to install zinit from ${GITHUB_URL}/zdharma-continuum/zinit.git" >&2
         exit 1
     fi
 fi
 
-# Utwórz globalny .zshrc dla wszystkich użytkowników (bez Powerlevel10k)
+# Create global .zshrc for all users (without Powerlevel10k)
 cat <<'ZSHRC' > /etc/skel/.zshrc
 # Use globally installed zinit
 ZINIT_HOME="/usr/local/share/zinit/zinit.git"
@@ -642,7 +659,7 @@ eval "$(starship init zsh)"
 export STARSHIP_CONFIG=~/.config/starship.toml
 ZSHRC
 
-# Upewnij się że /etc/skel/.zshrc ma odpowiednie uprawnienia
+# Ensure /etc/skel/.zshrc has proper permissions
 chmod 644 /etc/skel/.zshrc
 
 # Apply catppuccin-powerline preset for /etc/skel/
@@ -655,7 +672,7 @@ mkdir -p /root/.config
 starship preset catppuccin-powerline -o /root/.config/starship.toml >/dev/null 2>&1
 }
 
-####################################### Aktualizacja .zshrc dla istniejących użytkowników
+####################################### Update .zshrc for existing users
 
 do_update_existing_users()
 {
@@ -693,14 +710,14 @@ for user_home in /home/*; do
 done
 }
 
-####################################### MOTD Cyberpunk - modułowy system /etc/update-motd.d/
+####################################### MOTD Cyberpunk - modular system /etc/update-motd.d/
 
 do_motd_cyberpunk()
 {
-# Utwórz katalog /etc/tahion/ dla konfiguracji
+# Create /etc/tahion/ directory for configuration
 mkdir -p /etc/tahion
 
-# Utwórz plik z reklamami/linkami (jeden link na linię)
+# Create file with ads/links (one link per line)
 cat > /etc/tahion/ads.txt <<'ADS'
 ∞ tb.tahio.eu - Free ipv6 tunnelbroker
 ⚡ erssi.org - Modern IRC Client
@@ -710,19 +727,19 @@ cat > /etc/tahion/ads.txt <<'ADS'
 ∞ tb.tahio.eu - Free ipv6 tunnelbroker
 ADS
 
-# Wyłącz stare metody MOTD
-# PrintMotd jest już ustawione na 'no' w sshd_config
+# Disable old MOTD methods
+# PrintMotd is already set to 'no' in sshd_config
 rm -f /etc/motd
 rm -f /etc/profile.d/motd.sh
 
-# Wyczyść stare skrypty update-motd.d
+# Clear old update-motd.d scripts
 rm -f /etc/update-motd.d/*
 
-# Utwórz /etc/update-motd.d/00-header z cyberpunk stylem + rotating ads
+# Create /etc/update-motd.d/00-header with cyberpunk style + rotating ads
 cat > /etc/update-motd.d/00-header <<'HEADER'
 #!/bin/bash
 
-# Kolory
+# Colors
 cyan='\e[36m'
 neon_blue='\e[96m'
 red='\e[31m'
@@ -731,14 +748,14 @@ yellow='\e[33m'
 green='\e[32m'
 NC='\e[0m'
 
-# Losuj reklamę z pliku ads.txt
+# Pick a random ad from ads.txt
 if [ -f /etc/tahion/ads.txt ]; then
     AD_LINE=$(shuf -n 1 /etc/tahion/ads.txt)
 else
     AD_LINE="${red}⚡${NC} tahioN IRC Shell Installer"
 fi
 
-# Pobierz informacje
+# Get system information
 HOSTNAME=$(hostname -s)
 USERNAME="${USER:-$(logname 2>/dev/null || whoami)}"
 DATE=$(date "+%A, %d %B %Y")
@@ -750,11 +767,11 @@ echo -e "${cyan}║${NC} ${blue}⧗${NC} System Clock: ${DATE}"
 HEADER
 chmod +x /etc/update-motd.d/00-header
 
-# Utwórz /etc/update-motd.d/10-sysinfo
+# Create /etc/update-motd.d/10-sysinfo
 cat > /etc/update-motd.d/10-sysinfo <<'SYSINFO'
 #!/bin/bash
 
-# Kolory
+# Colors
 cyan='\e[36m'
 light_grey='\e[90m'
 light_green='\e[92m'
@@ -762,12 +779,12 @@ yellow='\e[33m'
 magenta='\e[35m'
 NC='\e[0m'
 
-# Pobierz informacje systemowe
+# Get system metrics
 UPTIME_RAW=$(uptime -p | sed 's/up //')
 USERS=$(who | wc -l)
 LOAD=$(cat /proc/loadavg | awk '{print $1" "$2" "$3}')
 
-# Format uptime na cyberpunk
+# Format uptime in cyberpunk style
 UPTIME_CYBER=$(echo "$UPTIME_RAW" | sed 's/hours\?/h/; s/minutes\?/m/; s/days\?/d/; s/,//g')
 
 echo -e "${cyan}║${NC} ${yellow}∞${NC} Core Runtime: ${UPTIME_CYBER} operational cycle"
@@ -777,11 +794,11 @@ echo -e "${cyan}║${NC} ${magenta}➜${NC} Execute '${magenta}tahion${NC}' prot
 SYSINFO
 chmod +x /etc/update-motd.d/10-sysinfo
 
-# Utwórz /etc/update-motd.d/50-diskspace
+# Create /etc/update-motd.d/50-diskspace
 cat > /etc/update-motd.d/50-diskspace <<'DISK'
 #!/bin/bash
 
-# Kolory
+# Colors
 cyan='\e[36m'
 neon_blue='\e[96m'
 green='\e[32m'
@@ -792,7 +809,7 @@ echo -e "${cyan}║${NC}"
 echo -e "${cyan}║${NC} ${neon_blue}◆${NC} Data Vault Allocation:"
 echo -e "${cyan}║${NC} ${green}Partition      Capacity  Allocated  Available  Usage  Mount Vector${NC}"
 
-# Pokaż wykorzystanie dysków (bez tmpfs, devtmpfs)
+# Show disk usage (excluding tmpfs, devtmpfs)
 df -h | grep -vE '^(tmpfs|devtmpfs|udev)' | awk 'NR==1 {next} {printf "║ %-14s %-9s %-10s %-10s %-6s %s\n", $1, $2, $3, $4, $5, $6}'
 
 echo -e "${cyan}║${NC}"
@@ -807,7 +824,7 @@ echo -e "${cyan}╚════════════════════�
 DISK
 chmod +x /etc/update-motd.d/50-diskspace
 
-# Wyłącz domyślne ubuntu/debian MOTD skrypty jeśli istnieją
+# Disable default Ubuntu/Debian MOTD scripts if they exist
 chmod -x /etc/update-motd.d/10-help-text 2>/dev/null || true
 chmod -x /etc/update-motd.d/50-landscape-sysinfo 2>/dev/null || true
 chmod -x /etc/update-motd.d/50-motd-news 2>/dev/null || true
@@ -819,7 +836,7 @@ chmod -x /etc/update-motd.d/95-hwe-eol 2>/dev/null || true
 
 }
 
-####################################### Wykonywanie instalacji pakietów przez APT
+####################################### Installing packages via APT
 
 do_apt()
 {
@@ -873,7 +890,7 @@ do_apt()
     # Clean up
     DEBIAN_FRONTEND=noninteractive apt-get -y autoremove >/dev/null 2>&1
 }
-####################################### motd i baner
+####################################### motd and banner
 
 do_motd()
 {
@@ -906,33 +923,33 @@ EOF
 do_sshd_f2b()
 {
 # Fail2ban
-# Zdefiniuj swoje zaufane adresy IP oddzielone spacjami
+# Define your trusted IP addresses separated by spaces
 trusted_ips="127.0.0.1/8"
 
-# Zdefiniuj port SSH
+# Define SSH port
 ssh_port="$SSH_PORT"
 
-# Zdefiniuj maksymalną ilość prób łączenia
+# Define maximum number of connection attempts
 max_attempts="4"
 
-# Skopiuj jail.conf do jail.local, jeśli jail.local nie istnieje
+# Copy jail.conf to jail.local if jail.local does not exist
 rm_file "/etc/fail2ban/jail.local"
 if [ ! -f /etc/fail2ban/jail.local ]; then
      cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 fi
 
-# Dodaj sekcję DEFAULT z określonymi ignoreip na początek pliku jail.local
+# Add DEFAULT section with specified ignoreip at the beginning of jail.local
 echo -e "[DEFAULT]\nignoreip = $trusted_ips\n$(cat /etc/fail2ban/jail.local)" > /etc/fail2ban/jail.local
 rm_file "/etc/fail2ban/jail.d/jail-debian.local"
-# Utwórz plik jail-debian.local, jeśli nie istnieje
+# Create jail-debian.local if it does not exist
 if [ ! -f /etc/fail2ban/jail.d/jail-debian.local ]; then
      touch /etc/fail2ban/jail.d/jail-debian.local
 fi
 
-# Dodaj sekcję [sshd] z ustawieniami maxretry i port do pliku jail-debian.local
+# Add [sshd] section with maxretry and port settings to jail-debian.local
 echo -e "[sshd]\nmaxretry = $max_attempts\nport = $ssh_port" > /etc/fail2ban/jail.d/jail-debian.local
 
-# Zrestartuj Fail2Ban, aby zastosować nowe ustawienia
+# Restart Fail2Ban to apply new settings
 systemctl restart fail2ban --quiet --no-pager >/dev/null 2>&1
 
 # sshd_config
@@ -946,7 +963,7 @@ echo -e "Port ${SSH_PORT}" >> /etc/ssh/sshd_config
 if [ "$IPV6_ONLY" = true ]; then
     echo "ListenAddress ::" >> /etc/ssh/sshd_config
 else
-    # Dual-stack - słuchaj na obu
+    # Dual-stack - listen on both
     echo "ListenAddress 0.0.0.0" >> /etc/ssh/sshd_config
     echo "ListenAddress ::" >> /etc/ssh/sshd_config
 fi
@@ -1007,15 +1024,15 @@ EOF
 do_egg()
 {
 pushd /root/ >> /dev/null
-# Ustawienie adresu URL i nazwy pliku
+# Set URL and filename
 url="http://ftp.eggheads.org/pub/eggdrop/source/1.8/eggdrop-1.8.4.tar.gz"
 file_name="eggdrop-1.8.4.tar.gz"
 correct_sha256="79644eb27a5568934422fa194ce3ec21cfb9a71f02069d39813e85d99cdebf9e"
 
-# Pobieranie pliku
+# Download file
 wget -q ${url} -O ${file_name} >/dev/null 2>&1
 
-# Sprawdzanie poprawności pobranego pliku
+# Verify the downloaded file
 downloaded_sha256=$(sha256sum ${file_name} | awk '{print $1}')
 
 if [ "${correct_sha256}" == "${downloaded_sha256}" ]; then
@@ -1182,7 +1199,7 @@ git clone ${GITHUB_URL}/kofany/psotnic
 if [ -d "/root/psotnic" ]; then
     cd /root/psotnic/
 
-    # Sprawdź czy configure istnieje
+    # Check if configure exists
     if [ -f "./configure" ]; then
         chmod +x ./configure
         ./configure
@@ -1241,7 +1258,7 @@ git clone ${GITHUB_URL}/kofany/knb
 if [ -d "/root/knb" ]; then
     cd /root/knb/src/
 
-    # Sprawdź czy configure istnieje
+    # Check if configure exists
     if [ -f "./configure" ]; then
         chmod +x configure
         ./configure --without-validator
@@ -1257,7 +1274,7 @@ if [ -d "/root/knb" ]; then
                 return 1
             fi
 
-            # Szukaj pliku binarnego knb (nazwa może się różnić)
+            # Search for knb binary (name may vary)
             KNB_BINARY=$(find /root/knb -type f -name "knb-*-*" | head -1)
 
             if [ -n "$KNB_BINARY" ] && [ -f "$KNB_BINARY" ]; then
@@ -1300,32 +1317,32 @@ do_update()
 {
 pushd /root/ >> /dev/null
 
-# Stałe
+# Constants
 REPO_URL="${GITHUB_URL}/kofany/tahioN.git"
 CLONE_DIR="tahioN"
 UPDATE_DIR="${CLONE_DIR}/update"
 
-# Usuń stary folder jeśli istnieje
+# Remove old folder if exists
 rm -rf "/root/${CLONE_DIR}"
 
-# Sklonuj repo (używa GITHUB_URL która jest IPv6-aware)
+# Clone repo (uses GITHUB_URL which is IPv6-aware)
 if git clone --depth 1 "${REPO_URL}" "${CLONE_DIR}" >/dev/null 2>&1; then
 
-    # Sprawdź czy folder update istnieje
+    # Check if update folder exists
     if [ -d "/root/${UPDATE_DIR}" ]; then
-        # Wejście do folderu update
+        # Enter update folder
         pushd /root/${UPDATE_DIR} >/dev/null 2>&1
 
-        # Pobranie listy plików
+        # Get file list
         FILES_LIST=$(ls)
 
-        # Przenoszenie plików do /bin/
+        # Move files to /bin/
         for FILE in ${FILES_LIST}; do
             if [ -f "${FILE}" ]; then
-                # Usuń stary plik jeśli istnieje
+                # Remove old file if exists
                 [ -f "/bin/${FILE}" ] && rm -f "/bin/${FILE}"
 
-                # Kopiuj nowy plik
+                # Copy new file
                 cp "${FILE}" "/bin/${FILE}"
                 chmod +x "/bin/${FILE}"
             fi
@@ -1333,7 +1350,7 @@ if git clone --depth 1 "${REPO_URL}" "${CLONE_DIR}" >/dev/null 2>&1; then
 
         popd >/dev/null 2>&1
 
-        # Weryfikacja że kluczowe binaria zostały zainstalowane
+        # Verify that key binaries were installed
         if [ ! -f "/bin/tahion" ]; then
             echo "ERROR: tahion binary not installed to /bin/" >&2
             rm -rf /root/${CLONE_DIR}
@@ -1341,7 +1358,7 @@ if git clone --depth 1 "${REPO_URL}" "${CLONE_DIR}" >/dev/null 2>&1; then
             return 1
         fi
 
-        # Cleanup - usuń sklonowane repo
+        # Cleanup - remove cloned repo
         rm -rf /root/${CLONE_DIR}
 
         popd >/dev/null 2>&1
@@ -1360,7 +1377,7 @@ else
 fi
 }
 
-####################################### System logowania
+####################################### Logging system
 
 LOG_FILE="/var/log/tahion.log"
 
@@ -1380,11 +1397,11 @@ run_task_with_log() {
     # Start task w UI
     start_task $task_idx
 
-    # Wykonaj funkcję i loguj output
+    # Execute function and log output
     "$@" >> "$LOG_FILE" 2>&1
     local exit_code=$?
 
-    # Complete task w UI
+    # Complete task in UI
     complete_task $task_idx
 
     if [ $exit_code -eq 0 ]; then
@@ -1401,92 +1418,91 @@ run_task_with_log() {
 
 do_admin()
 {
-# Funkcja generująca losowe hasło
+# Function generating random password
 generate_random_password() {
     cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1
 }
 
-# Pytanie użytkownika czy chce utworzyć konta
-echo -e "\n${yellow}Czy chcesz utworzyć konta użytkowników z uprawnieniami sudo? [t/n]${NC}"
+# Ask user if they want to create accounts
+echo -e "\n${yellow}⚡ Create sudo admin accounts? [y/n]${NC}"
 read -r create_accounts
 
-if [[ ! "$create_accounts" =~ ^[tT]$ ]]; then
-    tt "${green}Pomijam tworzenie kont administratorów."
+if [[ ! "$create_accounts" =~ ^[yY]$ ]]; then
+    tt "${green}⬢ Skipping admin account creation."
     return 0
 fi
 
-# Pytanie o nazwy użytkowników
-echo -e "\n${yellow}Podaj nazwy użytkowników (oddzielone spacją, np: user1 user2 user3):${NC}"
+# Ask for usernames
+echo -e "\n${yellow}⬢ Enter usernames (space-separated, e.g: user1 user2 user3):${NC}"
 read -r user_input
 
-# Zamiana inputu na tablicę
+# Convert input to array
 IFS=' ' read -ra users <<< "$user_input"
 
 if [ ${#users[@]} -eq 0 ]; then
-    tt "${red}Nie podano żadnych nazw użytkowników. Pomijam tworzenie kont."
+    tt "${red}⚠ No usernames provided. Skipping account creation."
     return 0
 fi
 
-# Deklaracja tablicy asocjacyjnej dla haseł
+# Declare associative array for passwords
 declare -A user_passwords
 
-# Tworzenie użytkowników
-echo -e "\n${green}=== Tworzenie użytkowników ===${NC}\n"
+# Create users
+echo -e "\n${green}=== ⚡ CREATING USER ENTITIES ===${NC}\n"
 
 for user in "${users[@]}"; do
-    # Walidacja nazwy użytkownika (tylko alfanumeryczne i podkreślnik)
+    # Validate username (only alphanumeric and underscore)
     if ! [[ "$user" =~ ^[a-z_][a-z0-9_-]*$ ]]; then
-        tt "${red}Nieprawidłowa nazwa użytkownika: ${user}. Pomijam."
+        tt "${red}⚠ Invalid username: ${user}. Skipping."
         continue
     fi
 
     if id -u "${user}" >/dev/null 2>&1; then
-        tt "${yellow}Użytkownik ${user} już istnieje. Pomijam."
+        tt "${yellow}⬢ User ${user} already exists. Skipping."
     else
         password=$(generate_random_password)
-        # Twórz użytkownika z zsh jako domyślnym shellem
+        # Create user with zsh as default shell
         useradd -m -s /bin/zsh "${user}"
         echo "${user}:${password}" | chpasswd
         user_passwords["${user}"]=${password}
 
-        tt "${green}Użytkownik ${user} został utworzony z zsh + starship."
+        tt "${green}✓ User ${user} deployed with zsh + starship protocol."
     fi
 done
 
-# Dodanie uprawnień sudo
+# Add sudo privileges
 if [ ${#user_passwords[@]} -gt 0 ]; then
-    echo -e "\n${green}=== Dodawanie uprawnień sudo ===${NC}\n"
+    echo -e "\n${green}=== ⚡ GRANTING ROOT PRIVILEGES ===${NC}\n"
 
     for user in "${!user_passwords[@]}"; do
         if grep -q -E "^${user}\s" /etc/sudoers; then
-            tt "${yellow}Użytkownik ${user} ma już uprawnienia sudo."
+            tt "${yellow}⬢ User ${user} already has sudo privileges."
         else
             echo -e "${user} ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
-            tt "${green}Użytkownik ${user} otrzymał uprawnienia sudo."
+            tt "${green}✓ User ${user} granted sudo access."
         fi
     done
 
-    # Wyświetlenie danych logowania
+    # Display login credentials
     external_ip=$(curl -s https://ipinfo.io/ip)
 
-    echo -e "\n${green}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${green}║          DANE LOGOWANIA DO UTWORZONYCH KONT               ║${NC}"
-    echo -e "${green}╠════════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${green}║${NC} Adres IP serwera: ${cyan}${external_ip}${NC}"
-    echo -e "${green}║${NC} Port SSH:         ${cyan}${SSH_PORT}${NC}"
-    echo -e "${green}╠════════════════════════════════════════════════════════════╣${NC}"
+    echo -e "\n${cyan}╔═══[${yellow}⚡ ACCESS CREDENTIALS GENERATED ⚡${cyan}]${NC}"
+    echo -e "${cyan}║${NC}"
+    echo -e "${cyan}║${NC} ${green}⬢${NC} Server IP:  ${cyan}${external_ip}${NC}"
+    echo -e "${cyan}║${NC} ${green}⬢${NC} SSH Port:   ${cyan}${SSH_PORT}${NC}"
+    echo -e "${cyan}║${NC}"
 
     for user in "${!user_passwords[@]}"; do
-        echo -e "${green}║${NC} Użytkownik: ${yellow}${user}${NC}"
-        echo -e "${green}║${NC} Hasło:      ${cyan}${user_passwords["${user}"]}${NC}"
-        echo -e "${green}╠════════════════════════════════════════════════════════════╣${NC}"
+        echo -e "${cyan}║${NC} ${yellow}➜${NC} User:     ${yellow}${user}${NC}"
+        echo -e "${cyan}║${NC} ${yellow}➜${NC} Password: ${cyan}${user_passwords["${user}"]}${NC}"
+        echo -e "${cyan}║${NC}"
     done
 
-    echo -e "${green}╚════════════════════════════════════════════════════════════╝${NC}"
-    echo -e "\n${red}WAŻNE: Zapisz te dane w bezpiecznym miejscu!${NC}\n"
+    echo -e "${cyan}╚═══════════════════════════════════════════════════[${red}SAVE CREDENTIALS${cyan}]${NC}"
+    echo -e "\n${red}⚠ CRITICAL: Save these credentials in secure storage!${NC}\n"
 
 else
-    tt "${yellow}Nie utworzono żadnych nowych użytkowników."
+    tt "${yellow}⬢ No new users created."
 fi
 
 }
@@ -1494,21 +1510,21 @@ fi
 
 
 end_of_all() {
-tt "${cyan}" "tahioN zakończył konfigurowanie Twojego nowego boxa"
+tt "${cyan}" "⚡ tahioN has successfully configured your mainframe"
 sleep 1.5
-tt "${cyan}" "zrób reboot i zaloguj się teraz na nowy port"
+tt "${cyan}" "⬢ Execute system reboot and reconnect via new port"
 sleep 1.5
 }
 
 banner
 
-# Inicjalizacja systemu logowania
+# Initialize logging system
 init_log
 
-# Inicjalizacja systemu progress bar
+# Initialize progress bar system
 init_tasks
 
-# Uruchom instalację z progress barem
+# Run installation with progress bar
 clear
 
 # Task 0: IPv6 network detection & GitHub proxy setup
@@ -1544,18 +1560,18 @@ run_task_with_log 8 "KNB bot" do_knb
 # Task 9: Binary update & system finalization
 run_task_with_log 9 "Binary updates" do_update
 
-# Finalne wyświetlenie progress bara (100%)
+# Final progress bar display (100%)
 sleep 1
 tput cnorm
 clear
 
-# Info o logu instalacji
+# Installation log info
 echo -e "${cyan}╔═══════════════════════════════════════════════════════════════════${NC}"
-echo -e "${cyan}║${NC}  ${green}✓ Installation completed${NC}"
-echo -e "${cyan}║${NC}  ${green}Full log saved to: ${LOG_FILE}${NC}"
+echo -e "${cyan}║${NC}  ${green}✓ BREACH COMPLETE: Mainframe deployment successful${NC}"
+echo -e "${cyan}║${NC}  ${green}⧗ Full system log archived to: ${LOG_FILE}${NC}"
 echo -e "${cyan}╚═══════════════════════════════════════════════════════════════════${NC}\n"
 
-# Interaktywne tworzenie kont administratorów (po zakończeniu instalacji)
+# Interactive creation of admin accounts (after installation)
 do_admin
 
 end_of_all
