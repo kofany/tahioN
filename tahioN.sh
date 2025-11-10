@@ -871,33 +871,7 @@ do_apt()
 }
 ####################################### motd and banner
 
-do_motd()
-{
-    rm_file "/etc/motd"
-    rm_file "/etc/banner"
-    rm_file "/etc/profile.d/motd.sh"
 
-cat <<'EOF' >> /etc/banner
-
-                                               ,ggg, ,ggggggg,
-     I8               ,dPYb,                  dP""Y8,8P"""""Y8b
-     I8               IP'`Yb                  Yb, `8dP'     `88
-  88888888            I8  8I      gg           `"  88'       88
-     I8               I8  8'      ""               88        88
-     I8     ,gggg,gg  I8 dPgg,    gg     ,ggggg,   88        88
-     I8    dP"  "Y8I  I8dP" "8I   88    dP"  "Y8ggg88        88
-    ,I8,  i8'    ,8I  I8P    I8   88   i8'    ,8I  88        88
-   ,d88b,,d8,   ,d8b,,d8     I8,_,88,_,d8,   ,d8'  88        Y8,
-   8P""Y8P"Y8888P"`Y888P     `Y88P""Y8P"Y8888P"    88        `Y8
-
-EOF
-
-    rm_file "/etc/hostname"
-    echo -e "LC_TIME=\"C\"" >> /etc/default/locale
-    echo -e "${SERVER_NAME}" >> /etc/hostname
-    hostname ${SERVER_NAME} < /dev/null > /dev/null
-    touch /etc/skel/.hushlogin
-}
 
 do_sshd_f2b()
 {
@@ -965,6 +939,22 @@ nameserver 1.1.1.1
 nameserver 9.9.9.9
 nameserver 2001:4860:4860::8888
 nameserver 2606:4700:4700::1111
+EOF
+
+rm_file "/etc/banner"
+cat <<'EOF' >> /etc/banner
+
+                                               ,ggg, ,ggggggg,
+     I8               ,dPYb,                  dP""Y8,8P"""""Y8b
+     I8               IP'`Yb                  Yb, `8dP'     `88
+  88888888            I8  8I      gg           `"  88'       88
+     I8               I8  8'      ""               88        88
+     I8     ,gggg,gg  I8 dPgg,    gg     ,ggggg,   88        88
+     I8    dP"  "Y8I  I8dP" "8I   88    dP"  "Y8ggg88        88
+    ,I8,  i8'    ,8I  I8P    I8   88   i8'    ,8I  88        88
+   ,d88b,,d8,   ,d8b,,d8     I8,_,88,_,d8,   ,d8'  88        Y8,
+   8P""Y8P"Y8888P"`Y888P     `Y88P""Y8P"Y8888P"    88        `Y8
+
 EOF
 }
 
