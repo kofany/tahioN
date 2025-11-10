@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Full MOTD generator - cyberpunk edition
+# Usage: motd
+
+# Colors
+cyan='\e[36m'
+neon_blue='\e[96m'
+red='\e[31m'
+blue='\e[34m'
+yellow='\e[33m'
+green='\e[32m'
+light_grey='\e[90m'
+light_green='\e[92m'
+magenta='\e[35m'
+metalic_gray='\e[90m'
+NC='\e[0m'
+
+clear
+
+# Pick a random ad from ads.txt
+if [ -f /etc/tahion/ads.txt ]; then
+    AD_LINE=$(shuf -n 1 /etc/tahion/ads.txt)
+else
+    AD_LINE="${red}⚡${NC} tahioN IRC Shell Installer"
+fi
+
+# Get system information
+HOSTNAME=$(hostname -s)
+USERNAME="${USER:-$(logname 2>/dev/null || whoami)}"
+DATE=$(date "+%A, %d %B %Y")
+
+# Get system metrics
+UPTIME_RAW=$(uptime -p | sed 's/up //')
+USERS=$(who | wc -l)
+LOAD=$(cat /proc/loadavg | awk '{print $1" "$2" "$3}')
+
+# Format uptime in cyberpunk style
+UPTIME_CYBER=$(echo "$UPTIME_RAW" | sed 's/hours\?/h/; s/minutes\?/m/; s/days\?/d/; s/,//g')
+
+# ═══════════════════════════════════════════════════════════════════
+# Header
+echo -e "${cyan}╔═[ ${yellow}tahioN${cyan} ]═══[ ${neon_blue}${AD_LINE}${cyan}"
+echo -e "${cyan}║${NC} ${red}⚡ ACCESS GRANTED ⚡${NC} Entity ${green}${USERNAME}${NC} breached ${yellow}${HOSTNAME}${NC} mainframe"
+echo -e "${cyan}║${NC} ${blue}⧗${NC} System Clock: ${DATE}"
+echo -e "${cyan}║${NC} ${yellow}∞${NC} Core Runtime: ${UPTIME_CYBER} operational cycle"
+echo -e "${cyan}║${NC} ${light_grey}⬢${NC} Active Entities: ${USERS} nodes synchronized"
+echo -e "${cyan}║${NC} ${light_green}⚙${NC} Processing Load: ${LOAD} nominal"
+echo -e "${cyan}║${NC} ${magenta}➜${NC} Execute '${magenta}tahion${NC}' protocol for command matrix."
+echo -e "${cyan}║${NC}"
+
+# ═══════════════════════════════════════════════════════════════════
+# Disk usage
+echo -e "${cyan}║${NC} ${neon_blue}◆${NC} Data Vault Allocation:"
+echo -e "${cyan}║${NC} ${green}Partition      Capacity  Allocated  Available  Usage  Mount Vector${NC}"
+
+# Show disk usage (excluding tmpfs, devtmpfs)
+df -h | grep -vE '^(tmpfs|devtmpfs|udev)' | awk 'NR==1 {next} {printf "'"${cyan}"'║'"${NC}"' %-14s %-9s %-10s %-10s %-6s %s\n", $1, $2, $3, $4, $5, $6}'
+
+echo -e "${cyan}║${NC}"
+
+# ═══════════════════════════════════════════════════════════════════
+# Starship info
+echo -e "${cyan}║${NC} ${green}⚡${NC} Starship Theme: Change with ${neon_blue}starship preset apply <theme>${NC}"
+echo -e "${cyan}║${NC}   ${metalic_gray}Available presets:${NC}"
+echo -e "${cyan}║${NC}   ${cyan}bracketed-segments${NC}, ${neon_blue}catppuccin-powerline${NC}, ${green}gruvbox-rainbow${NC},"
+echo -e "${cyan}║${NC}   ${green}jetpack${NC}, ${metalic_gray}nerd-font-symbols${NC}, ${cyan}no-empty-icons${NC},"
+echo -e "${cyan}║${NC}   ${neon_blue}no-nerd-font${NC}, ${green}no-runtime-versions${NC}, ${neon_blue}pastel-powerline${NC},"
+echo -e "${cyan}║${NC}   ${cyan}plain-text-symbols${NC}, ${green}pure-preset${NC}, ${neon_blue}tokyo-night${NC}"
+echo -e "${cyan}║${NC}"
+
+# ═══════════════════════════════════════════════════════════════════
+# Footer
+echo -e "${cyan}╚════════════════════════════[${metalic_gray}made with <3 by kofany & yooz${cyan}]${NC}"

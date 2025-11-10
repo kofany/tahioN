@@ -66,11 +66,6 @@ init_tasks() {
 
 # Function drawing progress bar - Cyberpunk edition (open-ended frame)
 draw_progress() {
-    # ZAPEWNIAMY, że kolory działają nawet jak coś się zepsuło
-    printf '\033[0m' 2>/dev/null       # reset ANSI
-    tput sgr0 2>/dev/null
-    tput colors >/dev/null 2>&1 || return  # jeśli nie ma 256 kolorów → nie rysuj
-
     local total_tasks=${#TASKS_NAMES[@]}
     local completed_tasks=0
 
@@ -182,10 +177,6 @@ complete_task() {
 
     TASKS_STATUS[$task_idx]=2
 
-    # Reset przed finalnym rysowaniem
-    printf '\033[0m'                   # reset ANSI
-    tput sgr0 2>/dev/null
-
     # Clear screen before drawing final state
     tput cup 0 0 2>/dev/null
     tput ed 2>/dev/null
@@ -253,21 +244,15 @@ yes_or_no() {
 ####################################### Matrix Intro Banner
 banner()
 {
-    # Secure temporary file with PID (unique per process)
-    local INTRO_SCRIPT="/tmp/.tahion_intro_$$"
-    
-    # Trap to ensure cleanup even on Ctrl+C
-    trap "rm -f '$INTRO_SCRIPT' 2>/dev/null" EXIT INT TERM
-    
-    # Create Matrix intro script  
-    cat > "$INTRO_SCRIPT" << 'INTRO_EOF'
-#!/usr/bin/env bash
+# Create standalone intro script
+cat > /tmp/tahion_intro.sh <<'INTRO_SCRIPT'
+#!/bin/bash
+
+# Accept parameters
 SSH_PORT="$1"
 SERVER_NAME="$2"
 
-printf '\033c\033[?47l\033[?1049l\033[?25l\033[2J'
-stty -echo
-
+# Helper functions for Matrix intro
 init_term_matrix() {
     printf '\e[?1049h\e[2J\e[?25l'
     IFS='[;' read -p $'\e[999;999H\e[6n' -rd R -s _ LINES COLUMNS
@@ -289,6 +274,7 @@ rain() {
     ((dropSpeed=RANDOM%9+1))
     ((dropColDim=RANDOM%4))
     color=${rain_colors[RANDOM%${#rain_colors[@]}]}
+
     for ((i=dropStart; i <= LINES+dropLen; i++)); do
         symbol=${1:RANDOM%${#1}:1}
         (( dropColDim )) || print_to "$symbol" $i $dropCol "$color" 1
@@ -298,6 +284,7 @@ rain() {
     done
 }
 
+# ASCII Art Logo
 logo=(
 "                                             ,ggg, ,ggggggg,  "
 "   I8               ,dPYb,                  dP\"\"Y8,8P\"\"\"\"\"Y8b "
@@ -314,11 +301,21 @@ logo=(
 fade_in_logo() {
     local start_line=$(( (LINES - ${#logo[@]}) / 2 ))
     local max_col=0
+
     for line in "${logo[@]}"; do
         (( ${#line} > max_col )) && max_col=${#line}
     done
+
     local start_col=$(( (COLUMNS - max_col) / 2 ))
-    local fade_colors=("40;40;40" "80;80;80" "120;120;120" "180;180;180" "255;255;255")
+
+    local fade_colors=(
+        "40;40;40"
+        "80;80;80"
+        "120;120;120"
+        "180;180;180"
+        "255;255;255"
+    )
+
     for color in "${fade_colors[@]}"; do
         local line_num=$start_line
         for line in "${logo[@]}"; do
@@ -327,6 +324,7 @@ fade_in_logo() {
         done
         sleep 0.2
     done
+
     printf '\e[2J'
     line_num=$start_line
     for line in "${logo[@]}"; do
@@ -336,85 +334,139 @@ fade_in_logo() {
         printf '\e[%d;%dH\e[38;2;%d;%d;%sm%s\e[m' "$line_num" "$start_col" "$r" "$g" "$b" "$line"
         ((line_num++))
     done
+
     sleep 2
 }
 
 typewriter() {
-    local text="$1" color="$2" delay="${3:-0.03}" newline="${4:-yes}"
+    local text="$1"
+    local color="$2"
+    local delay="${3:-0.03}"
+    local newline="${4:-yes}"
+
     for ((i=0; i<${#text}; i++)); do
         printf "\e[38;2;%sm%s\e[m" "$color" "${text:$i:1}"
         sleep "$delay"
     done
     [[ "$newline" == "yes" ]] && echo
+    printf ""
 }
 
+# Setup traps
 trap 'kill 0 2>/dev/null; deinit_term_matrix; exit' INT TERM
 trap init_term_matrix WINCH
+
 export LC_ALL=en_US.UTF-8
 
+# Matrix rain symbols and colors
 symbols='カキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789'
 rain_colors=('102;255;102' '51;255;51' '0;255;0')
 
 init_term_matrix
 stty -echo
 
+# Matrix rain for 5 seconds
 rain_pids=()
 end_time=$((SECONDS + 5))
+
 while ((SECONDS < end_time)); do
     rain "$symbols" &
     rain_pids+=($!)
     sleep 0.1
 done
-for pid in "${rain_pids[@]}"; do kill "$pid" 2>/dev/null || true; done
+
+for pid in "${rain_pids[@]}"; do
+    kill "$pid" 2>/dev/null || true
+done
 sleep 0.5
 
+# Fade in logo
 printf '\e[2J'
 fade_in_logo
 
+# Matrix messages
 printf '\e[2J'
 start_line=$(( LINES / 2 - 9 ))
-green="0;255;0" cyan="0;255;255" yellow="255;255;0" red="255;0;0" white="255;255;255"
 
-printf '\e[%d;1H' "$start_line"; typewriter "Wake up, Neo..." "$green" 0.05; sleep 0.3; ((start_line++))
-printf '\e[%d;1H' "$start_line"; typewriter "The Matrix has you..." "$cyan" 0.04; sleep 0.3; ((start_line++))
-printf '\e[%d;1H' "$start_line"; typewriter "Follow the white rabbit 🐇" "$green" 0.03; sleep 0.5; ((start_line++))
-printf '\e[%d;1H' "$start_line"; typewriter "Knock, knock, Neo." "$green" 0.03; sleep 0.3; ((start_line+=2))
-printf '\e[%d;1H' "$start_line"; typewriter "Port ${SSH_PORT} at ${SERVER_NAME}" "$cyan" 0.03; sleep 0.5; ((start_line+=2))
-printf '\e[%d;1H' "$start_line"; typewriter "WARNING: This is your last chance." "$yellow" 0.03; sleep 0.3; ((start_line++))
-printf '\e[%d;1H' "$start_line"; typewriter "After this, there is no turning back." "$yellow" 0.03; sleep 0.5; ((start_line+=2))
-printf '\e[%d;1H' "$start_line"; typewriter "Blue pill - the story ends, you disconnect." "$cyan" 0.03; sleep 0.3; ((start_line++))
-printf '\e[%d;1H' "$start_line"; typewriter "Red pill - you stay and see how deep the rabbit hole goes." "$red" 0.03; sleep 0.5; ((start_line+=2))
+green="0;255;0"
+cyan="0;255;255"
+yellow="255;255;0"
+red="255;0;0"
+white="255;255;255"
+
+printf '\e[%d;1H' "$start_line"
+typewriter "Wake up, Neo..." "$green" 0.05
+sleep 0.3
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "The Matrix has you..." "$cyan" 0.04
+sleep 0.3
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "Follow the white rabbit 🐇" "$green" 0.03
+sleep 0.5
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "Knock, knock, Neo." "$green" 0.03
+sleep 0.3
+((start_line+=2))
+printf '\e[%d;1H' "$start_line"
+typewriter "Port ${SSH_PORT} at ${SERVER_NAME}" "$cyan" 0.03
+sleep 0.5
+((start_line+=2))
+printf '\e[%d;1H' "$start_line"
+typewriter "WARNING: This is your last chance." "$yellow" 0.03
+sleep 0.3
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "After this, there is no turning back." "$yellow" 0.03
+sleep 0.5
+((start_line+=2))
+printf '\e[%d;1H' "$start_line"
+typewriter "Blue pill - the story ends, you disconnect." "$cyan" 0.03
+sleep 0.3
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "Red pill - you stay and see how deep the rabbit hole goes." "$red" 0.03
+sleep 0.5
+((start_line+=2))
 printf '\e[%d;1H' "$start_line"
 typewriter "Make your choice [" "$green" 0.04 no
 typewriter "red" "$red" 0.04 no
 typewriter "/" "$green" 0.04 no
 typewriter "blue" "$cyan" 0.04 no
 typewriter "]: " "$green" 0.04 no
-echo ""; ((start_line++))
-printf '\e[%d;1H' "$start_line"; typewriter "y = red pill (continue) / n = blue pill (abort)" "$white" 0.02
+echo ""
+((start_line++))
+printf '\e[%d;1H' "$start_line"
+typewriter "y = red pill (continue) / n = blue pill (abort)" "$white" 0.02
 sleep 2
 
+# Cleanup matrix mode
 deinit_term_matrix
 
-# Simple reset - just enough to clean up
-exec < /dev/tty
-stty sane
-reset
-
+# Exit cleanly
 exit 0
-INTRO_EOF
+INTRO_SCRIPT
 
-    chmod +x "$INTRO_SCRIPT"
-    bash "$INTRO_SCRIPT" "$SSH_PORT" "$SERVER_NAME"
-    rm -f "$INTRO_SCRIPT"
-    
-    printf '\033c\033[?1049l\033[?47l\033[?25h\033[0m'
-    tput reset 2>/dev/null
-    tput init 2>/dev/null
-    tput sgr0 2>/dev/null
-    export TERM=xterm-256color
+    # Make script executable
+    chmod +x /tmp/tahion_intro.sh
+
+    # Run intro script in clean subshell
+    bash /tmp/tahion_intro.sh "$SSH_PORT" "$SERVER_NAME"
+
+    # Remove intro script
+    rm -f /tmp/tahion_intro.sh
+
+    # Full terminal reset after intro
+    exec < /dev/tty
+    stty sane
+    reset
+
+    # Clear and show static logo
     clear
-    
+
+    # ASCII Art Logo (repeated for display after intro)
     logo=(
     "                                             ,ggg, ,ggggggg,  "
     "   I8               ,dPYb,                  dP\"\"Y8,8P\"\"\"\"\"Y8b "
@@ -427,18 +479,20 @@ INTRO_EOF
     " ,d88b,,d8,   ,d8b,,d8     I8,_,88,_,d8,   ,d8'  88        Y8,"
     " 8P\"\"Y8P\"Y8888P\"\`Y888P     \`Y88P\"\"Y8P\"Y8888P\"    88        \`Y8"
     )
-    
+
+    # Display logo with color gradient
     for line in "${logo[@]}"; do
-        r=$((50 + RANDOM % 50))
-        g=$((200 + RANDOM % 55))
-        b=$((100 + RANDOM % 100))
-        echo -e "\e[38;2;${r};${g};${b}m${line}\e[0m"
+        local r=$((50 + RANDOM % 50))
+        local g=$((200 + RANDOM % 55))
+        local b=$((100 + RANDOM % 100))
+        echo -e "\e[38;2;${r};${g};${b}m${line}\e[m"
     done
-    echo
-    
+
+    echo ""  # Empty line before question
+
+    # Ask user with standard yes_or_no
     yes_or_no "Ready to enter the Matrix"
 }
-
 
 ####################################### IPv6 GitHub Support
 
@@ -697,53 +751,6 @@ do_motd_cyberpunk()
 # Create /etc/tahion/ directory for configuration
 mkdir -p /etc/tahion
 
-# Create welcome script with fade-in logo (shown at every login)
-cat > /etc/profile.d/tahion_welcome.sh <<'WELCOME'
-#!/bin/bash
-
-# Skip if not interactive shell
-[[ $- != *i* ]] && return
-
-# Skip if already shown in this session
-[ -n "$TAHION_WELCOME_SHOWN" ] && return
-export TAHION_WELCOME_SHOWN=1
-
-# Fade-in logo function
-show_welcome_logo() {
-    clear
-    
-    local logo=(
-    "                                             ,ggg, ,ggggggg,  "
-    "   I8               ,dPYb,                  dP\"\"Y8,8P\"\"\"\"\"Y8b "
-    "   I8               IP'\`Yb                  Yb, \`8dP'     \`88 "
-    "88888888            I8  8I      gg           \`\"  88'       88 "
-    "   I8               I8  8'      \"\"               88        88 "
-    "   I8     ,gggg,gg  I8 dPgg,    gg     ,ggggg,   88        88 "
-    "   I8    dP\"  \"Y8I  I8dP\" \"8I   88    dP\"  \"Y8ggg88        88 "
-    "  ,I8,  i8'    ,8I  I8P    I8   88   i8'    ,8I  88        88 "
-    " ,d88b,,d8,   ,d8b,,d8     I8,_,88,_,d8,   ,d8'  88        Y8,"
-    " 8P\"\"Y8P\"Y8888P\"\`Y888P     \`Y88P\"\"Y8P\"Y8888P\"    88        \`Y8"
-    )
-    
-    # Center logo and fade-in with colors
-    for line in "${logo[@]}"; do
-        r=$((50 + RANDOM % 50))
-        g=$((200 + RANDOM % 55))
-        b=$((100 + RANDOM % 100))
-        echo -e "\e[38;2;${r};${g};${b}m${line}\e[0m"
-    done
-    
-    sleep 1
-    clear
-}
-
-# Show logo then MOTD
-show_welcome_logo
-run-parts --lsbsysinit /etc/update-motd.d 2>/dev/null
-WELCOME
-
-chmod +x /etc/profile.d/tahion_welcome.sh
-
 # Create file with ads/links (one link per line)
 cat > /etc/tahion/ads.txt <<'ADS'
 ∞ tb.tahio.eu - Free ipv6 tunnelbroker
@@ -762,46 +769,94 @@ rm -f /etc/profile.d/motd.sh
 # Clear old update-motd.d scripts
 rm -f /etc/update-motd.d/*
 
-# Create minimal MOTD with logo + info line only
-cat > /etc/update-motd.d/00-minimal <<'MINIMAL'
+# Create /etc/update-motd.d/00-header with cyberpunk style + rotating ads
+cat > /etc/update-motd.d/00-header <<'HEADER'
 #!/bin/bash
 
 # Colors
 cyan='\e[36m'
 neon_blue='\e[96m'
+red='\e[31m'
+blue='\e[34m'
 yellow='\e[33m'
 green='\e[32m'
+NC='\e[0m'
+
+# Pick a random ad from ads.txt
+if [ -f /etc/tahion/ads.txt ]; then
+    AD_LINE=$(shuf -n 1 /etc/tahion/ads.txt)
+else
+    AD_LINE="${red}⚡${NC} tahioN IRC Shell Installer"
+fi
+
+# Get system information
+HOSTNAME=$(hostname -s)
+USERNAME="${USER:-$(logname 2>/dev/null || whoami)}"
+DATE=$(date "+%A, %d %B %Y")
+
+# Cyberpunk header
+echo -e "${cyan}╔═[ ${yellow}${HOSTNAME}${cyan} ]═══[ ${neon_blue}${AD_LINE}${cyan}"
+echo -e "${cyan}║${NC} ${red}⚡ ACCESS GRANTED ⚡${NC} Entity ${green}${USERNAME}${NC} breached ${yellow}${HOSTNAME}${NC} mainframe"
+echo -e "${cyan}║${NC} ${blue}⧗${NC} System Clock: ${DATE}"
+HEADER
+chmod +x /etc/update-motd.d/00-header
+
+# Create /etc/update-motd.d/10-sysinfo
+cat > /etc/update-motd.d/10-sysinfo <<'SYSINFO'
+#!/bin/bash
+
+# Colors
+cyan='\e[36m'
+light_grey='\e[90m'
+light_green='\e[92m'
+yellow='\e[33m'
 magenta='\e[35m'
 NC='\e[0m'
 
-# ASCII logo tahioN
-logo=(
-"                                             ,ggg, ,ggggggg,  "
-"   I8               ,dPYb,                  dP\"\"Y8,8P\"\"\"\"\"Y8b "
-"   I8               IP'\`Yb                  Yb, \`8dP'     \`88 "
-"88888888            I8  8I      gg           \`\"  88'       88 "
-"   I8               I8  8'      \"\"               88        88 "
-"   I8     ,gggg,gg  I8 dPgg,    gg     ,ggggg,   88        88 "
-"   I8    dP\"  \"Y8I  I8dP\" \"8I   88    dP\"  \"Y8ggg88        88 "
-"  ,I8,  i8'    ,8I  I8P    I8   88   i8'    ,8I  88        88 "
-" ,d88b,,d8,   ,d8b,,d8     I8,_,88,_,d8,   ,d8'  88        Y8,"
-" 8P\"\"Y8P\"Y8888P\"\`Y888P     \`Y88P\"\"Y8P\"Y8888P\"    88        \`Y8"
-)
+# Get system metrics
+UPTIME_RAW=$(uptime -p | sed 's/up //')
+USERS=$(who | wc -l)
+LOAD=$(cat /proc/loadavg | awk '{print $1" "$2" "$3}')
 
-# Fade-in logo with colors (right aligned)
-for line in "${logo[@]}"; do
-    r=$((50 + RANDOM % 50))
-    g=$((200 + RANDOM % 55))
-    b=$((100 + RANDOM % 100))
-    printf "\e[38;2;%d;%d;%dm%s\e[0m\n" "$r" "$g" "$b" "$line"
-    sleep 0.05
-done
+# Format uptime in cyberpunk style
+UPTIME_CYBER=$(echo "$UPTIME_RAW" | sed 's/hours\?/h/; s/minutes\?/m/; s/days\?/d/; s/,//g')
 
-echo ""
-echo -e "${cyan}║${NC} ${neon_blue}ℹ${NC}  For full motd just type ${magenta}motd${NC}"
-echo ""
-MINIMAL
-chmod +x /etc/update-motd.d/00-minimal
+echo -e "${cyan}║${NC} ${yellow}∞${NC} Core Runtime: ${UPTIME_CYBER} operational cycle"
+echo -e "${cyan}║${NC} ${light_grey}⬢${NC} Active Entities: ${USERS} nodes synchronized"
+echo -e "${cyan}║${NC} ${light_green}⚙${NC} Processing Load: ${LOAD} nominal"
+echo -e "${cyan}║${NC} ${magenta}➜${NC} Execute '${magenta}tahion${NC}' protocol for command matrix."
+SYSINFO
+chmod +x /etc/update-motd.d/10-sysinfo
+
+# Create /etc/update-motd.d/50-diskspace
+cat > /etc/update-motd.d/50-diskspace <<'DISK'
+#!/bin/bash
+
+# Colors
+cyan='\e[36m'
+neon_blue='\e[96m'
+green='\e[32m'
+metalic_gray='\e[90m'
+NC='\e[0m'
+
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}║${NC} ${neon_blue}◆${NC} Data Vault Allocation:"
+echo -e "${cyan}║${NC} ${green}Partition      Capacity  Allocated  Available  Usage  Mount Vector${NC}"
+
+# Show disk usage (excluding tmpfs, devtmpfs)
+df -h | grep -vE '^(tmpfs|devtmpfs|udev)' | awk 'NR==1 {next} {printf "║ %-14s %-9s %-10s %-10s %-6s %s\n", $1, $2, $3, $4, $5, $6}'
+
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}║${NC} ${green}⚡${NC} Starship Theme: Change with ${neon_blue}starship preset apply <theme>${NC}"
+echo -e "${cyan}║${NC}   ${metalic_gray}Available presets:${NC}"
+echo -e "${cyan}║${NC}   ${cyan}bracketed-segments${NC}, ${neon_blue}catppuccin-powerline${NC}, ${green}gruvbox-rainbow${NC},"
+echo -e "${cyan}║${NC}   ${green}jetpack${NC}, ${metalic_gray}nerd-font-symbols${NC}, ${cyan}no-empty-icons${NC},"
+echo -e "${cyan}║${NC}   ${neon_blue}no-nerd-font${NC}, ${green}no-runtime-versions${NC}, ${neon_blue}pastel-powerline${NC},"
+echo -e "${cyan}║${NC}   ${cyan}plain-text-symbols${NC}, ${green}pure-preset${NC}, ${neon_blue}tokyo-night${NC}"
+echo -e "${cyan}║${NC}"
+echo -e "${cyan}╚════════════════════════════[${metalic_gray}made with <3 by kofany & yooz${cyan}]${NC}"
+DISK
+chmod +x /etc/update-motd.d/50-diskspace
 
 # Disable default Ubuntu/Debian MOTD scripts if they exist
 chmod -x /etc/update-motd.d/10-help-text 2>/dev/null || true
@@ -1497,25 +1552,10 @@ sleep 1.5
 
 banner
 
-# ███ TOTALNY RESET TERMINALA PO MATRIXIE - MUSI BYĆ PRZED init_tasks ███
-printf '\033c'                     # full reset ESC c
-printf '\033[?47l'                 # wychodzi z alternate screen buffer
-printf '\033[?1049l'               # wychodzi z alternate screen (na wszelki wypadek)
-printf '\033[?25h'                 # pokaż kursor
-tput rmcup 2>/dev/null             # na pewno wróć do normalnego bufora
-tput reset 2>/dev/null             # twardy reset terminfo
-tput init 2>/dev/null              # przeładuj bazę terminfo
-tput sgr0                          # wyzeruj wszystkie atrybuty
-stty sane
-stty echo
-export TERM=xterm-256color
-[ -n "$TMUX" ] && tmux set -g terminal-overrides ",xterm-256color:Tc" 2>/dev/null
-[ -n "$TMUX" ] && tmux refresh-client -S 2>/dev/null
-clear
-sleep 0.15                         # daj terminalowi czas na przebudzenie
-
-# Teraz dopiero możemy bezpiecznie rysować progress bar
+# Initialize logging system
 init_log
+
+# Initialize progress bar system
 init_tasks
 
 # Run installation with progress bar
