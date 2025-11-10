@@ -819,7 +819,7 @@ for line in "${logo[@]}"; do
 done
 
 echo ""
-echo -e "${cyan}${NC} ${magenta}ℹ${NC} Commands: ${neon_blue}motd ${magenta}❯${NC} tahion ${magenta}❯${NC} tahio pl ${magenta}❯${NC} pomoc ${NC}"
+echo -e "${cyan}${NC} ${magenta}ℹ${NC} Commands: ${neon_blue}motd ${magenta}❯${NC} tahion ${magenta}❯${NC} tahion pl ${magenta}❯${NC} pomoc ${NC}"
 echo ""
 MINIMAL
 chmod +x /etc/update-motd.d/00-minimal
