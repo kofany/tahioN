@@ -729,17 +729,35 @@ logo=(
 " 8P\"\"Y8P\"Y8888P\"\`Y888P     \`Y88P\"\"Y8P\"Y8888P\"    88        \`Y8"
 )
 
-# Fade-in effect - same as banner() but 1 second instead of 2
-for line in "${logo[@]}"; do
-    r=$((50 + RANDOM % 50))
-    g=$((200 + RANDOM % 55))
-    b=$((100 + RANDOM % 100))
-    echo -e "\e[38;2;${r};${g};${b}m${line}\e[0m"
-    sleep 0.1
-done
-echo
+fade_in_logo() {
+    local start_line=$(( (LINES - ${#logo[@]}) / 2 ))
+    local max_col=0
+    for line in "${logo[@]}"; do
+        (( ${#line} > max_col )) && max_col=${#line}
+    done
+    local start_col=$(( (COLUMNS - max_col) / 2 ))
+    local fade_colors=("40;40;40" "80;80;80" "120;120;120" "180;180;180" "255;255;255")
+    for color in "${fade_colors[@]}"; do
+        local line_num=$start_line
+        for line in "${logo[@]}"; do
+            printf '\e[%d;%dH\e[38;2;%sm%s\e[m' "$line_num" "$start_col" "$color" "$line"
+            ((line_num++))
+        done
+        sleep 0.15
+    done
+    printf '\e[2J'
+    line_num=$start_line
+    for line in "${logo[@]}"; do
+        local r=$((50 + RANDOM % 50))
+        local g=$((200 + RANDOM % 55))
+        local b=$((100 + RANDOM % 100))
+        printf '\e[%d;%dH\e[38;2;%d;%d;%sm%s\e[m' "$line_num" "$start_col" "$r" "$g" "$b" "$line"
+        ((line_num++))
+    done
+    sleep 1
+}
 
-sleep 1
+fade_in_logo
 clear
 
 # Show minimal MOTD
@@ -935,6 +953,10 @@ Banner /etc/banner
 AcceptEnv LANG LC_*
 Subsystem       sftp    /usr/lib/openssh/sftp-server
 PrintLastLog no
+
+# Keep SSH connections alive
+ClientAliveInterval 60
+ClientAliveCountMax 3
 EOF
 rm_file "/etc/resolv.conf"
 cat <<'EOF' >> /etc/resolv.conf
