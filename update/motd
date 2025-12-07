@@ -55,7 +55,7 @@ echo -e "${cyan}║${NC} ${neon_blue}◆${NC} Data Vault Allocation:"
 echo -e "${cyan}║${NC} ${green}Partition      Capacity  Allocated  Available  Usage  Mount Vector${NC}"
 
 # Show disk usage (excluding tmpfs, devtmpfs)
-df -h | grep -vE '^(tmpfs|devtmpfs|udev)' | awk 'NR==1 {next} {printf "'"${cyan}"'║'"${NC}"' %-14s %-9s %-10s %-10s %-6s %s\n", $1, $2, $3, $4, $5, $6}'
+df -h | grep -vE '^(tmpfs|devtmpfs|udev)' | awk 'NR==1 {next} {printf "\033[36m║\033[0m %-14s %-9s %-10s %-10s %-6s %s\n", $1, $2, $3, $4, $5, $6}'
 
 echo -e "${cyan}║${NC}"
 
