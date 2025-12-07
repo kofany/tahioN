@@ -655,6 +655,15 @@ starship preset catppuccin-powerline -o /etc/skel/.config/starship.toml >/dev/nu
 cp /etc/skel/.zshrc /root/.zshrc
 mkdir -p /root/.config
 starship preset catppuccin-powerline -o /root/.config/starship.toml >/dev/null 2>&1
+
+# Ghostty terminal compatibility fix
+# If xterm-ghostty doesn't exist but ghostty terminfo does, create symlink
+if [ ! -f "/usr/share/terminfo/x/xterm-ghostty" ]; then
+    if [ -f "/usr/share/terminfo/g/ghostty" ]; then
+        mkdir -p /usr/share/terminfo/x
+        cp /usr/share/terminfo/g/ghostty /usr/share/terminfo/x/xterm-ghostty
+    fi
+fi
 }
 
 ####################################### Update .zshrc for existing users
